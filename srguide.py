@@ -7,11 +7,12 @@ warnings.filterwarnings('ignore')
 
 # Set page configuration
 st.set_page_config(
-    page_title="Subrecipe Guide",
-    layout="wide"
+    page_title="BOM Explosion",
+    layout="centered"
 )
 
-st.title("Commissary Subrecipe Guide")
+st.title("BOM Explosion")
+st.markdown("Bill of Materials - Production Planning")
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
@@ -264,7 +265,7 @@ if selected_recipe:
         
         # Display results
         st.markdown("---")
-        st.subheader("📊 Batch Analytics")
+        st.subheader("Batch Analytics")
         
         col1, col2, col3 = st.columns(3)
         
@@ -282,7 +283,7 @@ if selected_recipe:
         
         # Display Ingredients Table
         st.markdown("---")
-        st.subheader("📦 Ingredients Breakdown")
+        st.subheader("Ingredients Breakdown")
         
         if not ingredients_df.empty:
             # Filter ingredients for selected recipe (case-insensitive)
@@ -336,34 +337,6 @@ if selected_recipe:
                 st.warning(f"No ingredients found for '{selected_recipe}'")
         else:
             st.error("Unable to load ingredients data")
-        
-        # Debug information
-        if st.checkbox("Show Debug Info"):
-            st.markdown("---")
-            st.subheader("Debug Information")
-            
-            st.write(f"**Selected Recipe:** {selected_recipe}")
-            st.write(f"**Normalized Search Term:** {selected_normalized}")
-            st.write(f"**Batch Input:** {batch_input}")
-            
-            st.write("**Subrecipe Data Shape:**", subrecipe_df.shape)
-            st.write("**Batch Data Shape:**", batch_df.shape)
-            st.write("**Ingredients Data Shape:**", ingredients_df.shape)
-            
-            if not recipe_row.empty:
-                st.write("**Recipe Row Data:**")
-                st.dataframe(recipe_row.drop(columns=['_normalized_name']))
-            
-            if not batch_df.empty:
-                st.write("**Batch Data Sample:**")
-                st.dataframe(batch_df.head().drop(columns=['_normalized_name']))
-            
-            if not ingredients_df.empty:
-                st.write("**Ingredients Data Sample:**")
-                st.dataframe(ingredients_df.head())
-            
-            st.write("**Available Subrecipes:**")
-            st.write(subrecipe_options[:10])  # Show first 10 options
     
     else:
         st.error(f"Recipe '{selected_recipe}' not found in the data")
@@ -372,6 +345,6 @@ else:
     st.info("Please select a subrecipe to see the analytics")
 
 # Refresh button
-if st.button("🔄 Refresh Data"):
+if st.button("Refresh Data"):
     st.cache_data.clear()
     st.rerun()
