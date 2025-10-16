@@ -122,9 +122,48 @@ def load_batch_data():
         st.error(f"Error loading batch data: {str(e)}")
         return pd.DataFrame()
 
+# --- LOAD INGREDIENTS DATA ---
+@st.cache_data(ttl=60)
+def load_ingredients_data():
+    """Load ingredients data from sheet index 4 (5th sheet)"""
+    credentials = load_credentials()
+    if not credentials:
+        return pd.DataFrame()
+
+    try:
+        gc = gspread.authorize(credentials)
+        spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+        sh = gc.open_by_key(spreadsheet_id)
+
+        # Get sheet index 4 (fifth sheet)
+        worksheet = sh.get_worksheet(4)
+        data = worksheet.get_all_values()
+        
+        if len(data) < 2:
+            st.warning("Not enough data in sheet index 4 for ingredients")
+            return pd.DataFrame()
+
+        # Create DataFrame with headers from first row
+        df = pd.DataFrame(data[1:], columns=data[0])
+        
+        # Clean the data
+        df = df.replace('', pd.NA)
+        
+        # Add normalized column for case-insensitive matching
+        if len(df.columns) > 0:
+            df['_normalized_subrecipe'] = df.iloc[:, 0].str.strip().str.lower()
+            df['_normalized_ingredient'] = df.iloc[:, 1].str.strip().str.lower()
+        
+        return df
+
+    except Exception as e:
+        st.error(f"Error loading ingredients data: {str(e)}")
+        return pd.DataFrame()
+
 # Load data
 subrecipe_df = load_subrecipe_data()
 batch_df = load_batch_data()
+ingredients_df = load_ingredients_data()
 
 if subrecipe_df.empty:
     st.error("Unable to load subrecipe data. Please check your Google Sheets connection.")
@@ -242,6 +281,63 @@ if selected_recipe:
             st.metric("Shelf Life (days)", shelf_life)
             st.metric("Storage Condition", storage_condition)
         
+        # Display Ingredients Table
+        st.markdown("---")
+        st.subheader("📦 Ingredients Breakdown")
+        
+        if not ingredients_df.empty:
+            # Filter ingredients for selected recipe (case-insensitive)
+            recipe_ingredients = ingredients_df[ingredients_df['_normalized_subrecipe'] == selected_normalized].copy()
+            
+            if not recipe_ingredients.empty:
+                # Remove duplicates based on subrecipe + ingredient combination
+                recipe_ingredients = recipe_ingredients.drop_duplicates(
+                    subset=['_normalized_subrecipe', '_normalized_ingredient'],
+                    keep='first'
+                )
+                
+                # Prepare display data
+                ingredients_display = []
+                for idx, row in recipe_ingredients.iterrows():
+                    ingredient_name = row.iloc[1] if pd.notna(row.iloc[1]) else "N/A"  # Column B
+                    qty_conversion = 0
+                    
+                    # Get quantity conversion from Column D (index 3)
+                    if len(row) > 3 and pd.notna(row.iloc[3]):
+                        try:
+                            qty_conversion = float(row.iloc[3])
+                        except (ValueError, TypeError):
+                            qty_conversion = 0
+                    
+                    # Calculate total quantity (multiply by batch input)
+                    total_qty = qty_conversion * batch_input
+                    
+                    ingredients_display.append({
+                        "Ingredient": ingredient_name,
+                        "Qty per Batch (KG)": f"{qty_conversion:.3f}",
+                        "Total Qty (KG)": f"{total_qty:.3f}",
+                        "UOM": "KG"
+                    })
+                
+                if ingredients_display:
+                    # Display as table
+                    ingredients_table_df = pd.DataFrame(ingredients_display)
+                    st.dataframe(
+                        ingredients_table_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                    
+                    # Calculate total weight
+                    total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
+                    st.info(f"**Total Ingredients Weight: {total_weight:.3f} KG**")
+                else:
+                    st.warning("No valid ingredient data found for this recipe")
+            else:
+                st.warning(f"No ingredients found for '{selected_recipe}'")
+        else:
+            st.error("Unable to load ingredients data")
+        
         # Debug information
         if st.checkbox("Show Debug Info"):
             st.markdown("---")
@@ -253,6 +349,7 @@ if selected_recipe:
             
             st.write("**Subrecipe Data Shape:**", subrecipe_df.shape)
             st.write("**Batch Data Shape:**", batch_df.shape)
+            st.write("**Ingredients Data Shape:**", ingredients_df.shape)
             
             if not recipe_row.empty:
                 st.write("**Recipe Row Data:**")
@@ -261,6 +358,10 @@ if selected_recipe:
             if not batch_df.empty:
                 st.write("**Batch Data Sample:**")
                 st.dataframe(batch_df.head().drop(columns=['_normalized_name']))
+            
+            if not ingredients_df.empty:
+                st.write("**Ingredients Data Sample:**")
+                st.dataframe(ingredients_df.head())
             
             st.write("**Available Subrecipes:**")
             st.write(subrecipe_options[:10])  # Show first 10 options
