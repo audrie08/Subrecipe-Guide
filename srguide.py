@@ -495,7 +495,7 @@ if selected_recipe:
                     .total-weight-box {
                         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
                         color: white;
-                        padding: 1.2rem 1.5rem;
+                        padding: 0.8rem 1.5rem;
                         border-radius: 8px;
                         display: inline-block;
                         margin-top: 1rem;
@@ -527,7 +527,7 @@ if selected_recipe:
                     # Calculate total weight and display in two columns
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
                     
-                    col_left, col_right = st.columns([1, 1])
+                    col_left, col_right = st.columns([2, 1])
                     
                     with col_right:
                         st.markdown(f"""
