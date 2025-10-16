@@ -381,7 +381,6 @@ if selected_recipe:
         
         # Display results
         st.markdown("---")
-        st.subheader("Batch Analytics")
         
         col1, col2, col3 = st.columns(3)
         
@@ -399,7 +398,6 @@ if selected_recipe:
         
         # Display Ingredients Table
         st.markdown("---")
-        st.subheader("Ingredients Breakdown")
         
         if not ingredients_df.empty:
             # Filter ingredients for selected recipe (case-insensitive)
