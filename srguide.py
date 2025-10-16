@@ -494,10 +494,10 @@ if selected_recipe:
                     .total-weight-box {
                         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
                         color: white;
-                        padding: 1.2rem 1.5rem;
+                        padding: 1.8rem 1.5rem;
                         border-radius: 8px;
                         display: inline-block;
-                        margin-top: 1rem;
+                        margin-top: 0.8rem;
                     }
                     .total-weight-box .weight-label {
                         font-weight: 700;
