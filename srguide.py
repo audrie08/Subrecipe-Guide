@@ -50,7 +50,7 @@ st.markdown("""
         background: white;
         padding: 1.8rem 1.5rem;
         border-radius: 16px;
-        border: 1px solid #e8e8e8;
+        border: 1px solid #374151;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         position: relative;
         overflow: hidden;
