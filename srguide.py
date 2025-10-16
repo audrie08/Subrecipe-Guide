@@ -63,13 +63,13 @@ st.markdown("""
         left: 0;
         width: 100%;
         height: 4px;
-        background: linear-gradient(90deg, #9ca3af 0%, #d1d5db 100%);
+        background: linear-gradient(90deg, #1f2937 0%, #374151 100%);
     }
     
     div[data-testid="stMetric"]:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(156, 163, 175, 0.15);
-        border-color: #9ca3af;
+        box-shadow: 0 8px 20px rgba(31, 41, 55, 0.15);
+        border-color: #374151;
         transition: all 0.3s ease;
     }
     
@@ -455,10 +455,10 @@ if selected_recipe:
                         margin: 0;
                     }
                     .ingredients-table thead {
-                        background: linear-gradient(135deg, #9ca3af 0%, #d1d5db 100%);
+                        background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
                     }
                     .ingredients-table th {
-                        color: #2d2d2d;
+                        color: #ffffff;
                         font-weight: 600;
                         padding: 1rem;
                         text-align: left;
