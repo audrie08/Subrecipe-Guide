@@ -63,13 +63,13 @@ st.markdown("""
         left: 0;
         width: 100%;
         height: 4px;
-        background: linear-gradient(90deg, #fbbf24 0%, #fcd34d 100%);
+        background: linear-gradient(90deg, #9ca3af 0%, #d1d5db 100%);
     }
     
     div[data-testid="stMetric"]:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(251, 191, 36, 0.15);
-        border-color: #fbbf24;
+        box-shadow: 0 8px 20px rgba(156, 163, 175, 0.15);
+        border-color: #9ca3af;
         transition: all 0.3s ease;
     }
     
@@ -307,7 +307,7 @@ if not subrecipe_options:
     st.stop()
 
 # Controls
-col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns([2, 1])
 
 with col1:
     st.write("**Select Sub-Recipe:**")
@@ -380,6 +380,8 @@ if selected_recipe:
             expected_packs = int(total_expected_output / pack_size)
         
         # Display results
+        st.markdown("---")
+        st.subheader("Batch Analytics")
         
         col1, col2, col3 = st.columns(3)
         
@@ -396,6 +398,8 @@ if selected_recipe:
             st.metric("Storage Condition", storage_condition)
         
         # Display Ingredients Table
+        st.markdown("---")
+        st.subheader("Ingredients Breakdown")
         
         if not ingredients_df.empty:
             # Filter ingredients for selected recipe (case-insensitive)
@@ -455,7 +459,7 @@ if selected_recipe:
                         margin: 0;
                     }
                     .ingredients-table thead {
-                        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+                        background: linear-gradient(135deg, #9ca3af 0%, #d1d5db 100%);
                     }
                     .ingredients-table th {
                         color: #2d2d2d;
@@ -487,17 +491,18 @@ if selected_recipe:
                     .ingredients-table tr:last-child td {
                         border-bottom: none;
                     }
-                    /* Bold the Total Qty column */
+                    /* Bold the Ingredient and Total Qty columns */
+                    .ingredients-table td:nth-child(1),
                     .ingredients-table td:nth-child(3) {
                         font-weight: 700;
                     }
                     .total-weight-box {
                         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
                         color: white;
-                        padding: 1rem 1.5rem;
+                        padding: 1.2rem 1.5rem;
                         border-radius: 8px;
                         display: inline-block;
-                        margin-top: 0.5rem;
+                        margin-top: 1rem;
                     }
                     .total-weight-box .weight-label {
                         font-weight: 700;
@@ -526,12 +531,12 @@ if selected_recipe:
                     # Calculate total weight and display in two columns
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
                     
-                    col_left, col_right = st.columns([2, 1])
+                    col_left, col_right = st.columns([1, 1])
                     
                     with col_right:
                         st.markdown(f"""
                             <div class="total-weight-box">
-                                <span class="weight-label">Total Ingredients Weight:</span> {total_weight:.3f} KG
+                                <span class="weight-label">Total Volume:</span> {total_weight:.3f} KG
                             </div>
                         """, unsafe_allow_html=True)
                 else:
@@ -546,3 +551,16 @@ if selected_recipe:
 
 else:
     st.info("Please select a subrecipe to see the analytics")
+
+# Refresh button
+if st.button("Refresh Data"):
+    st.cache_data.clear()
+    st.rerun()
+
+# Footer
+st.markdown("---")
+st.markdown("""
+    <div style="text-align: center; color: #6a6a6a; font-size: 0.9rem; padding: 2rem 0 1rem 0;">
+        Subrecipe Guide 2025
+    </div>
+    """, unsafe_allow_html=True)
