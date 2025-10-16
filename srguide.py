@@ -7,12 +7,11 @@ warnings.filterwarnings('ignore')
 
 # Set page configuration
 st.set_page_config(
-    page_title="BOM Explosion",
+    page_title="Subrecipe Guide",
     layout="centered"
 )
 
-st.title("BOM Explosion")
-st.markdown("Bill of Materials - Production Planning")
+st.title("Commissary Subrecipe")
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
