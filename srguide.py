@@ -11,7 +11,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Commissary Subrecipe Guide")
+st.title("🧪 BOM Explosion")
+st.markdown("Bill of Materials - Production Planning")
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
