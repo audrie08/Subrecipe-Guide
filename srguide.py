@@ -11,9 +11,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS to make content slightly narrower
+# Custom CSS with modern UI design
 st.markdown("""
     <style>
+    /* Container styling */
     .block-container {
         max-width: 1200px;
         padding-left: 5rem;
@@ -21,10 +22,113 @@ st.markdown("""
         padding-top: 1rem;
         padding-bottom: 1rem;
     }
+    
+    /* Header styling */
+    .main-header {
+        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+        padding: 2rem 2.5rem;
+        border-radius: 16px;
+        border-bottom: 3px solid #f59e0b;
+        margin-bottom: 2rem;
+    }
+    
+    .main-header h1 {
+        color: #2d2d2d;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .main-header p {
+        color: #5a5a5a;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+    
+    /* Metric cards styling */
+    div[data-testid="stMetric"] {
+        background: white;
+        padding: 1.8rem 1.5rem;
+        border-radius: 16px;
+        border: 1px solid #e8e8e8;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    div[data-testid="stMetric"]::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #fbbf24 0%, #fcd34d 100%);
+    }
+    
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(251, 191, 36, 0.15);
+        border-color: #fbbf24;
+        transition: all 0.3s ease;
+    }
+    
+    div[data-testid="stMetric"] label {
+        font-size: 0.8rem !important;
+        color: #6a6a6a !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+        color: #2d2d2d !important;
+    }
+    
+    /* Input styling */
+    .stSelectbox > div > div, .stNumberInput > div > div > input {
+        border: 2px solid #e0e0e0 !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stSelectbox > div > div:focus-within, .stNumberInput > div > div:focus-within {
+        border-color: #fbbf24 !important;
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1) !important;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
+        color: #2d2d2d !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4) !important;
+    }
+    
+    /* Subheader styling */
+    h3 {
+        color: #2d2d2d;
+        font-weight: 600;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("Commissary Subrecipe Guide")
+# Header
+st.markdown("""
+    <div class="main-header">
+        <h1>Commissary Subrecipe Guide</h1>
+    </div>
+    """, unsafe_allow_html=True)
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
@@ -334,17 +438,93 @@ if selected_recipe:
                         })
                 
                 if ingredients_display:
-                    # Display as table
-                    ingredients_table_df = pd.DataFrame(ingredients_display)
-                    st.dataframe(
-                        ingredients_table_df,
-                        use_container_width=True,
-                        hide_index=True
-                    )
+                    # Build HTML table with modern styling
+                    table_html = """
+                    <style>
+                    .modern-table {
+                        width: 100%;
+                        border-collapse: separate;
+                        border-spacing: 0;
+                        border-radius: 12px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                        margin-bottom: 1.5rem;
+                    }
+                    .modern-table thead {
+                        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+                    }
+                    .modern-table th {
+                        padding: 1rem;
+                        text-align: left;
+                        font-weight: 600;
+                        color: #2d2d2d;
+                        font-size: 0.9rem;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .modern-table tbody tr {
+                        background: white;
+                        transition: background 0.2s ease;
+                    }
+                    .modern-table tbody tr:nth-child(even) {
+                        background: #fafafa;
+                    }
+                    .modern-table tbody tr:hover {
+                        background: #fff9e6;
+                    }
+                    .modern-table td {
+                        padding: 1rem;
+                        color: #4a4a4a;
+                        border-top: 1px solid #e8e8e8;
+                    }
+                    .total-box {
+                        background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
+                        color: white;
+                        padding: 1.2rem 1.5rem;
+                        border-radius: 8px;
+                        display: inline-block;
+                    }
+                    .total-box strong {
+                        font-weight: 700;
+                        color: #fbbf24;
+                    }
+                    </style>
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Ingredient</th>
+                                <th>Qty per Batch (KG)</th>
+                                <th>Total Qty (KG)</th>
+                                <th>UOM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    """
+                    
+                    for item in ingredients_display:
+                        table_html += f"""
+                            <tr>
+                                <td>{item['Ingredient']}</td>
+                                <td>{item['Qty per Batch (KG)']}</td>
+                                <td><strong>{item['Total Qty (KG)']}</strong></td>
+                                <td>{item['UOM']}</td>
+                            </tr>
+                        """
+                    
+                    table_html += """
+                        </tbody>
+                    </table>
+                    """
+                    
+                    st.markdown(table_html, unsafe_allow_html=True)
                     
                     # Calculate total weight
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
-                    st.info(f"**Total Ingredients Weight: {total_weight:.3f} KG**")
+                    st.markdown(f"""
+                        <div class="total-box">
+                            <strong>Total Ingredients Weight:</strong> {total_weight:.3f} KG
+                        </div>
+                    """, unsafe_allow_html=True)
                 else:
                     st.warning("No valid ingredient data found for this recipe")
             else:
