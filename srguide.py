@@ -380,7 +380,6 @@ if selected_recipe:
             expected_packs = int(total_expected_output / pack_size)
         
         # Display results
-        st.markdown("---")
         
         col1, col2, col3 = st.columns(3)
         
@@ -397,7 +396,6 @@ if selected_recipe:
             st.metric("Storage Condition", storage_condition)
         
         # Display Ingredients Table
-        st.markdown("---")
         
         if not ingredients_df.empty:
             # Filter ingredients for selected recipe (case-insensitive)
