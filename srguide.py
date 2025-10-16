@@ -312,18 +312,22 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.write("**Select Sub-Recipe:**")
     selected_recipe = st.selectbox(
+        "Choose a subrecipe",
         options=subrecipe_options,
-        key="recipe_selector"
+        key="recipe_selector",
+        label_visibility="collapsed"
     )
 
 with col2:
     st.write("**Batch Input:**")
     batch_input = st.number_input(
+        "Batch quantity",
         min_value=1,
         max_value=1000,
         value=1,
         step=1,
-        key="batch_input"
+        key="batch_input",
+        label_visibility="collapsed"
     )
 
 # Calculate values based on selection
