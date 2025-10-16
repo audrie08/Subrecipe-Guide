@@ -8,8 +8,19 @@ warnings.filterwarnings('ignore')
 # Set page configuration
 st.set_page_config(
     page_title="Subrecipe Guide",
-    layout="centered"
+    layout="wide"
 )
+
+# Custom CSS to make content slightly narrower
+st.markdown("""
+    <style>
+    .block-container {
+        max-width: 1400px;
+        padding-left: 5rem;
+        padding-right: 5rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 st.title("Commissary Subrecipe")
 
