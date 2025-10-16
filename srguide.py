@@ -8,7 +8,6 @@ warnings.filterwarnings('ignore')
 # Set page configuration
 st.set_page_config(
     page_title="BOM Explosion",
-    page_icon="🧪",
     layout="wide"
 )
 
@@ -76,6 +75,10 @@ def load_subrecipe_data():
         # Clean the data
         df = df.replace('', pd.NA)
         
+        # Add normalized column for case-insensitive matching
+        if len(df.columns) > 0:
+            df['_normalized_name'] = df.iloc[:, 0].str.strip().str.lower()
+        
         return df
 
     except Exception as e:
@@ -109,6 +112,10 @@ def load_batch_data():
         # Clean the data
         df = df.replace('', pd.NA)
         
+        # Add normalized column for case-insensitive matching
+        if len(df.columns) > 0:
+            df['_normalized_name'] = df.iloc[:, 0].str.strip().str.lower()
+        
         return df
 
     except Exception as e:
@@ -123,12 +130,22 @@ if subrecipe_df.empty:
     st.error("Unable to load subrecipe data. Please check your Google Sheets connection.")
     st.stop()
 
-# Get subrecipe options from column A
+# Get subrecipe options from column A and deduplicate case-insensitively
 subrecipe_options = []
 if len(subrecipe_df.columns) > 0:
     # Get the first column (A) and remove empty values
     col_a_data = subrecipe_df.iloc[:, 0].dropna()
-    subrecipe_options = [item for item in col_a_data if str(item).strip()]
+    
+    # Create a dict to track unique normalized names and keep first occurrence
+    seen_normalized = {}
+    for item in col_a_data:
+        item_str = str(item).strip()
+        if item_str:
+            normalized = item_str.lower()
+            if normalized not in seen_normalized:
+                seen_normalized[normalized] = item_str
+    
+    subrecipe_options = list(seen_normalized.values())
 
 if not subrecipe_options:
     st.error("No subrecipe options found in column A of sheet index 1")
@@ -158,8 +175,11 @@ with col2:
 
 # Calculate values based on selection
 if selected_recipe:
-    # Find the row for selected recipe
-    recipe_row = subrecipe_df[subrecipe_df.iloc[:, 0] == selected_recipe]
+    # Normalize the selected recipe for matching
+    selected_normalized = selected_recipe.strip().lower()
+    
+    # Find the row for selected recipe (case-insensitive)
+    recipe_row = subrecipe_df[subrecipe_df['_normalized_name'] == selected_normalized]
     
     if not recipe_row.empty:
         recipe_data = recipe_row.iloc[0]
@@ -187,11 +207,11 @@ if selected_recipe:
             shelf_life = 0
             storage_condition = "Not specified"
         
-        # Get Batch Output from sheet index 4, column C
+        # Get Batch Output from sheet index 4, column C (case-insensitive match)
         batch_output = 0
         if not batch_df.empty:
-            # Find matching recipe in batch data
-            batch_row = batch_df[batch_df.iloc[:, 0] == selected_recipe]  # Assuming recipe name is in column A of batch sheet
+            # Find matching recipe in batch data using normalized names
+            batch_row = batch_df[batch_df['_normalized_name'] == selected_normalized]
             if not batch_row.empty and len(batch_row.iloc[0]) > 2:
                 try:
                     batch_output = float(batch_row.iloc[0].iloc[2])  # Column C = index 2
@@ -228,6 +248,7 @@ if selected_recipe:
             st.subheader("Debug Information")
             
             st.write(f"**Selected Recipe:** {selected_recipe}")
+            st.write(f"**Normalized Search Term:** {selected_normalized}")
             st.write(f"**Batch Input:** {batch_input}")
             
             st.write("**Subrecipe Data Shape:**", subrecipe_df.shape)
@@ -235,11 +256,11 @@ if selected_recipe:
             
             if not recipe_row.empty:
                 st.write("**Recipe Row Data:**")
-                st.dataframe(recipe_row)
+                st.dataframe(recipe_row.drop(columns=['_normalized_name']))
             
             if not batch_df.empty:
                 st.write("**Batch Data Sample:**")
-                st.dataframe(batch_df.head())
+                st.dataframe(batch_df.head().drop(columns=['_normalized_name']))
             
             st.write("**Available Subrecipes:**")
             st.write(subrecipe_options[:10])  # Show first 10 options
