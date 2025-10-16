@@ -307,7 +307,7 @@ if not subrecipe_options:
     st.stop()
 
 # Controls
-col1, col2 = st.columns([1.3, 1])
+col1, col2 = st.columns([1, 1])
 
 with col1:
     st.write("**Select Sub-Recipe:**")
