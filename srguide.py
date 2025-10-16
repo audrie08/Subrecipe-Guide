@@ -527,7 +527,7 @@ if selected_recipe:
                     # Calculate total weight and display in two columns
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
                     
-                    col_left, col_right = st.columns([2, 1])
+                    col_left, col_right = st.columns([3, 1])
                     
                     with col_right:
                         st.markdown(f"""
