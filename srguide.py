@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 
 # Set page configuration
 st.set_page_config(
-    page_title=Subrecipe Guide",
+    page_title="Subrecipe Guide",
     layout="wide"
 )
 
