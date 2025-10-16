@@ -22,7 +22,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("Commissary Subrecipe")
+st.title("Commissary Subrecipe Guide")
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
@@ -322,12 +322,14 @@ if selected_recipe:
                     # Calculate total quantity (multiply by batch input)
                     total_qty = qty_conversion * batch_input
                     
-                    ingredients_display.append({
-                        "Ingredient": ingredient_name,
-                        "Qty per Batch (KG)": f"{qty_conversion:.3f}",
-                        "Total Qty (KG)": f"{total_qty:.3f}",
-                        "UOM": "KG"
-                    })
+                    # Only add if qty_conversion is not 0
+                    if qty_conversion != 0:
+                        ingredients_display.append({
+                            "Ingredient": ingredient_name,
+                            "Qty per Batch (KG)": f"{qty_conversion:.3f}",
+                            "Total Qty (KG)": f"{total_qty:.3f}",
+                            "UOM": "KG"
+                        })
                 
                 if ingredients_display:
                     # Display as table
