@@ -438,19 +438,62 @@ if selected_recipe:
                         })
                 
                 if ingredients_display:
-                    # Convert to DataFrame for display
-                    ingredients_table_df = pd.DataFrame(ingredients_display)
+                    # Convert to DataFrame
+                    df_display = pd.DataFrame(ingredients_display)
                     
-                    # Apply custom styling to the dataframe
+                    # Add CSS styling first
                     st.markdown("""
                     <style>
-                    .stDataFrame {
+                    .ingredients-table-container {
                         border-radius: 12px;
-                        overflow: hidden;
                         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                        margin: 20px 0;
+                        overflow: hidden;
                     }
-                    .stDataFrame [data-testid="stDataFrameResizable"] {
+                    .ingredients-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 14px;
+                        background: white;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                        margin: 0;
+                    }
+                    .ingredients-table thead {
+                        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+                    }
+                    .ingredients-table th {
+                        color: #2d2d2d;
+                        font-weight: 600;
+                        padding: 1rem;
+                        text-align: left;
                         border: none;
+                        font-size: 0.9rem;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .ingredients-table td {
+                        padding: 1rem;
+                        color: #4a4a4a;
+                        border-top: 1px solid #e8e8e8;
+                        vertical-align: middle;
+                        text-align: left;
+                    }
+                    .ingredients-table tbody tr {
+                        background: white;
+                        transition: background 0.2s ease;
+                    }
+                    .ingredients-table tbody tr:nth-child(even) {
+                        background: #fafafa;
+                    }
+                    .ingredients-table tbody tr:hover {
+                        background: #fff9e6;
+                    }
+                    .ingredients-table tr:last-child td {
+                        border-bottom: none;
+                    }
+                    /* Bold the Total Qty column */
+                    .ingredients-table td:nth-child(3) {
+                        font-weight: 700;
                     }
                     .total-weight-box {
                         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
@@ -467,30 +510,22 @@ if selected_recipe:
                     </style>
                     """, unsafe_allow_html=True)
                     
-                    # Use Streamlit's native dataframe with custom column config
-                    st.dataframe(
-                        ingredients_table_df,
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config={
-                            "Ingredient": st.column_config.TextColumn(
-                                "Ingredient",
-                                width="medium"
-                            ),
-                            "Qty per Batch (KG)": st.column_config.TextColumn(
-                                "Qty per Batch (KG)",
-                                width="small"
-                            ),
-                            "Total Qty (KG)": st.column_config.TextColumn(
-                                "Total Qty (KG)",
-                                width="small"
-                            ),
-                            "UOM": st.column_config.TextColumn(
-                                "UOM",
-                                width="small"
-                            )
-                        }
+                    # Convert DataFrame to HTML
+                    html_table = df_display.to_html(
+                        escape=False,
+                        index=False,
+                        classes='ingredients-table',
+                        table_id='ingredients-table'
                     )
+                    
+                    # Wrap table in container
+                    table_html = f"""
+                    <div class="ingredients-table-container">
+                        {html_table}
+                    </div>
+                    """
+                    
+                    st.markdown(table_html, unsafe_allow_html=True)
                     
                     # Calculate total weight and display
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
