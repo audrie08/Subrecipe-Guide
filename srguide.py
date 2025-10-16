@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🧪 BOM Explosion")
+st.title("Commissary Subrecipe Guide")
 st.markdown("Bill of Materials - Production Planning")
 
 # --- CREDENTIALS HANDLING ---
