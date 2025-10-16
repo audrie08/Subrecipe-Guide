@@ -546,8 +546,3 @@ if selected_recipe:
 
 else:
     st.info("Please select a subrecipe to see the analytics")
-
-# Refresh button
-if st.button("Refresh Data"):
-    st.cache_data.clear()
-    st.rerun()
