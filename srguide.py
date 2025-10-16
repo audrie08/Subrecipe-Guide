@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 
 # Set page configuration
 st.set_page_config(
-    page_title="Subrecipe Guide",
+    page_title=Subrecipe Guide",
     layout="wide"
 )
 
@@ -15,14 +15,42 @@ st.set_page_config(
 st.markdown("""
     <style>
     .block-container {
-        max-width: 1400px;
+        max-width: 1200px;
         padding-left: 5rem;
         padding-right: 5rem;
+        padding-top: 2rem;
+        padding-bottom: 1rem;
+    }
+    h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.3rem;
+    }
+    h3 {
+        font-size: 1.2rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .stMarkdown p {
+        margin-bottom: 0.5rem;
+    }
+    div[data-testid="stMetric"] {
+        padding: 0.3rem 0;
+    }
+    div[data-testid="stMetric"] label {
+        font-size: 0.85rem;
+    }
+    div[data-testid="stMetric"] div {
+        font-size: 1.1rem;
+    }
+    hr {
+        margin: 0.8rem 0;
     }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("Commissary Subrecipe Guide")
+
+st.markdown("")  # Small spacer
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
@@ -274,7 +302,6 @@ if selected_recipe:
             expected_packs = int(total_expected_output / pack_size)
         
         # Display results
-        st.markdown("---")
         st.subheader("Batch Analytics")
         
         col1, col2, col3 = st.columns(3)
@@ -292,7 +319,6 @@ if selected_recipe:
             st.metric("Storage Condition", storage_condition)
         
         # Display Ingredients Table
-        st.markdown("---")
         st.subheader("Ingredients Breakdown")
         
         if not ingredients_df.empty:
@@ -337,12 +363,13 @@ if selected_recipe:
                     st.dataframe(
                         ingredients_table_df,
                         use_container_width=True,
-                        hide_index=True
+                        hide_index=True,
+                        height=300
                     )
                     
                     # Calculate total weight
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
-                    st.info(f"**Total Ingredients Weight: {total_weight:.3f} KG**")
+                    st.caption(f"Total Ingredients Weight: {total_weight:.3f} KG")
                 else:
                     st.warning("No valid ingredient data found for this recipe")
             else:
