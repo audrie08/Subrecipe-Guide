@@ -438,8 +438,8 @@ if selected_recipe:
                         })
                 
                 if ingredients_display:
-                    # Build HTML table with modern styling
-                    table_html = """
+                    # Add custom CSS for the table
+                    st.markdown("""
                     <style>
                     .modern-table {
                         width: 100%;
@@ -489,6 +489,21 @@ if selected_recipe:
                         color: #fbbf24;
                     }
                     </style>
+                    """, unsafe_allow_html=True)
+                    
+                    # Build HTML table
+                    table_rows = ""
+                    for item in ingredients_display:
+                        table_rows += f"""
+                            <tr>
+                                <td>{item['Ingredient']}</td>
+                                <td>{item['Qty per Batch (KG)']}</td>
+                                <td><strong>{item['Total Qty (KG)']}</strong></td>
+                                <td>{item['UOM']}</td>
+                            </tr>
+                        """
+                    
+                    table_html = f"""
                     <table class="modern-table">
                         <thead>
                             <tr>
@@ -499,19 +514,7 @@ if selected_recipe:
                             </tr>
                         </thead>
                         <tbody>
-                    """
-                    
-                    for item in ingredients_display:
-                        table_html += f"""
-                            <tr>
-                                <td>{item['Ingredient']}</td>
-                                <td>{item['Qty per Batch (KG)']}</td>
-                                <td><strong>{item['Total Qty (KG)']}</strong></td>
-                                <td>{item['UOM']}</td>
-                            </tr>
-                        """
-                    
-                    table_html += """
+                            {table_rows}
                         </tbody>
                     </table>
                     """
