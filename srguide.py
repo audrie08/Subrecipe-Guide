@@ -12,7 +12,6 @@ st.set_page_config(
 )
 
 st.title("Commissary Subrecipe Guide")
-st.markdown("Bill of Materials - Production Planning")
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
