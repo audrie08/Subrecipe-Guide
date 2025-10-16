@@ -381,6 +381,7 @@ if selected_recipe:
         
         # Display results
         st.markdown("---")
+        st.subheader("Batch Analytics")
         
         col1, col2, col3 = st.columns(3)
         
@@ -398,6 +399,7 @@ if selected_recipe:
         
         # Display Ingredients Table
         st.markdown("---")
+        st.subheader("Ingredients Breakdown")
         
         if not ingredients_df.empty:
             # Filter ingredients for selected recipe (case-insensitive)
@@ -525,13 +527,17 @@ if selected_recipe:
                     
                     st.markdown(table_html, unsafe_allow_html=True)
                     
-                    # Calculate total weight and display
+                    # Calculate total weight and display in two columns
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
-                    st.markdown(f"""
-                        <div class="total-weight-box">
-                            <span class="weight-label">Total Ingredients Weight:</span> {total_weight:.3f} KG
-                        </div>
-                    """, unsafe_allow_html=True)
+                    
+                    col_left, col_right = st.columns([1, 1])
+                    
+                    with col_right:
+                        st.markdown(f"""
+                            <div class="total-weight-box">
+                                <span class="weight-label">Total Ingredients Weight:</span> {total_weight:.3f} KG
+                            </div>
+                        """, unsafe_allow_html=True)
                 else:
                     st.warning("No valid ingredient data found for this recipe")
             else:
