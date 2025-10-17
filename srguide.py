@@ -645,17 +645,6 @@ elif st.session_state.page == "wps":
     else:
         st.subheader("")
         
-        # Debug: Show data info
-        with st.expander("🔍 Debug Information"):
-            st.write(f"**Total rows loaded:** {len(wps_df)}")
-            st.write(f"**Total columns loaded:** {len(wps_df.columns)}")
-            st.write(f"**Column names:** {list(wps_df.columns[:25])}")  # Show first 25 columns
-            st.write(f"**First 5 rows of Column A:**")
-            st.write(wps_df.iloc[:5, 0].tolist())
-            st.write(f"**Sample batch columns (P-V, indices 15-21):**")
-            if len(wps_df.columns) > 21:
-                st.write(wps_df.iloc[:5, 15:22])
-        
         # Get Column A (Subrecipe) and Columns P-V (Batches)
         # Column A is index 0, Columns P-V are indices 15-21
         if len(wps_df.columns) > 21:
