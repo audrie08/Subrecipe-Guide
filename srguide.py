@@ -625,6 +625,11 @@ if st.session_state.page == "subrecipe":
 else:
     st.info("Please select a subrecipe to see the analytics")
 
+# Refresh button
+if st.button("Refresh Data"):
+    st.cache_data.clear()
+    st.rerun()
+
 # Footer
 st.markdown("---")
 st.markdown("""
