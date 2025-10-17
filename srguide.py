@@ -317,7 +317,7 @@ def load_wps_data():
         sh = gc.open_by_key(spreadsheet_id)
 
         # Get sheet index 6 (seventh sheet)
-        worksheet = sh.get_worksheet(6)
+        worksheet = sh.get_worksheet(5)
         data = worksheet.get_all_values()
         
         if len(data) < 11:
