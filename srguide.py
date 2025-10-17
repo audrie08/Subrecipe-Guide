@@ -16,7 +16,7 @@ st.markdown("""
     <style>
     /* Container styling */
     .block-container {
-        max-width: 1200px;
+        max-width: 1400px;
         padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
@@ -404,8 +404,6 @@ if selected_recipe:
             expected_packs = int(total_expected_output / pack_size)
         
         # Display results
-        st.markdown("---")
-        st.subheader("Batch Analytics")
         
         col1, col2, col3 = st.columns(3)
         
@@ -422,8 +420,6 @@ if selected_recipe:
             st.metric("Storage Condition", storage_condition)
         
         # Display Ingredients Table
-        st.markdown("---")
-        st.subheader("Ingredients Breakdown")
         
         if not ingredients_df.empty:
             # Filter ingredients for selected recipe (case-insensitive)
@@ -523,7 +519,7 @@ if selected_recipe:
                     .total-weight-box {
                         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
                         color: white;
-                        padding: 1.2rem 1.5rem;
+                        padding: 0.5rem 1.5rem;
                         border-radius: 8px;
                         display: inline-block;
                         margin-top: 1rem;
@@ -555,7 +551,7 @@ if selected_recipe:
                     # Calculate total weight and display in two columns
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
                     
-                    col_left, col_right = st.columns([1, 1])
+                    col_left, col_right = st.columns([2, 1])
                     
                     with col_right:
                         st.markdown(f"""
@@ -575,11 +571,6 @@ if selected_recipe:
 
 else:
     st.info("Please select a subrecipe to see the analytics")
-
-# Refresh button
-if st.button("Refresh Data"):
-    st.cache_data.clear()
-    st.rerun()
 
 # Footer
 st.markdown("---")
