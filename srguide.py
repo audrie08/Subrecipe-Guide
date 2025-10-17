@@ -643,7 +643,7 @@ elif st.session_state.page == "wps":
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
     else:
-        st.subheader("Work Planning System")
+        st.subheader("")
         
         # Debug: Show data info
         with st.expander("🔍 Debug Information"):
