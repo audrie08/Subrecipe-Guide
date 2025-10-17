@@ -306,7 +306,7 @@ def load_ingredients_data():
 # --- LOAD WPS DATA ---
 @st.cache_data(ttl=60)
 def load_wps_data():
-    """Load WPS data from sheet index 5 (6th sheet)"""
+    """Load WPS data from sheet index 6 (7th sheet)"""
     credentials = load_credentials()
     if not credentials:
         return pd.DataFrame()
@@ -316,12 +316,12 @@ def load_wps_data():
         spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
         sh = gc.open_by_key(spreadsheet_id)
 
-        # Get sheet index 5 (seventh sheet)
-        worksheet = sh.get_worksheet(5)
+        # Get sheet index 6 (seventh sheet)
+        worksheet = sh.get_worksheet(6)
         data = worksheet.get_all_values()
         
         if len(data) < 11:
-            st.warning("Not enough data in sheet index 5")
+            st.warning("Not enough data in sheet index 6")
             return pd.DataFrame()
 
         # Header starts at row 10 (index 9), data starts at row 11 (index 10)
@@ -643,16 +643,102 @@ elif st.session_state.page == "wps":
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
     else:
-        st.subheader("")
+        st.subheader("Work Planning System")
         
-        # Display WPS data
-        st.dataframe(
-            wps_df,
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        st.info(f"Total records: {len(wps_df)}")
+        # Get Column A (Subrecipe) and Columns P-V (Batches)
+        # Column A is index 0, Columns P-V are indices 15-21
+        if len(wps_df.columns) > 21:
+            # Select columns A and P-V
+            display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
+            
+            # Remove rows where Column A is empty
+            display_df = display_df[display_df.iloc[:, 0].notna()]
+            display_df = display_df[display_df.iloc[:, 0] != '']
+            
+            # Rename columns for better display
+            column_names = ['Subrecipe'] + [f'Batch {i}' for i in range(1, 8)]
+            display_df.columns = column_names
+            
+            if not display_df.empty:
+                # Add CSS styling
+                st.markdown("""
+                <style>
+                .wps-table-container {
+                    border-radius: 12px;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                    margin: 20px 0;
+                    overflow: hidden;
+                }
+                .wps-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 14px;
+                    background: white;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                    margin: 0;
+                }
+                .wps-table thead {
+                    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+                }
+                .wps-table th {
+                    color: #ffffff;
+                    font-weight: 600;
+                    padding: 1rem;
+                    text-align: left;
+                    border: none;
+                    font-size: 0.9rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .wps-table td {
+                    padding: 1rem;
+                    color: #4a4a4a;
+                    border-top: 1px solid #e8e8e8;
+                    vertical-align: middle;
+                    text-align: left;
+                }
+                .wps-table tbody tr {
+                    background: white;
+                    transition: background 0.2s ease;
+                }
+                .wps-table tbody tr:nth-child(even) {
+                    background: #fafafa;
+                }
+                .wps-table tbody tr:hover {
+                    background: #fff9e6;
+                }
+                .wps-table tr:last-child td {
+                    border-bottom: none;
+                }
+                /* Bold the Subrecipe column */
+                .wps-table td:first-child {
+                    font-weight: 700;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # Convert DataFrame to HTML
+                html_table = display_df.to_html(
+                    escape=False,
+                    index=False,
+                    classes='wps-table',
+                    table_id='wps-table'
+                )
+                
+                # Wrap table in container
+                table_html = f"""
+                <div class="wps-table-container">
+                    {html_table}
+                </div>
+                """
+                
+                st.markdown(table_html, unsafe_allow_html=True)
+                
+                st.info(f"Total subrecipes: {len(display_df)}")
+            else:
+                st.warning("No valid WPS data found")
+        else:
+            st.error("Not enough columns in WPS data")
 
 # Footer
 st.markdown("---")
