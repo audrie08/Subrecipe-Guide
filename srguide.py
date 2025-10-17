@@ -16,7 +16,7 @@ st.markdown("""
     <style>
     /* Container styling */
     .block-container {
-        max-width: 1400px;
+        max-width: 1200px;
         padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
@@ -50,7 +50,7 @@ st.markdown("""
         background: white;
         padding: 1.8rem 1.5rem;
         border-radius: 16px;
-        border: 1px solid #374151;
+        border: 2px solid #374151;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         position: relative;
         overflow: hidden;
@@ -123,12 +123,34 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Header
-st.markdown("""
-    <div class="main-header">
-        <h1>Commissary Subrecipe Guide</h1>
-    </div>
-    """, unsafe_allow_html=True)
+# Header with navigation
+col_nav1, col_nav2 = st.columns([1, 1])
+
+with col_nav1:
+    if st.button("📋 Subrecipe Guide", use_container_width=True):
+        st.session_state.page = "subrecipe"
+
+with col_nav2:
+    if st.button("📊 WPS", use_container_width=True):
+        st.session_state.page = "wps"
+
+# Initialize page state
+if 'page' not in st.session_state:
+    st.session_state.page = "subrecipe"
+
+# Display appropriate header based on page
+if st.session_state.page == "subrecipe":
+    st.markdown("""
+        <div class="main-header">
+            <h1>Commissary Subrecipe Guide</h1>
+        </div>
+        """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+        <div class="main-header">
+            <h1>Work Planning System (WPS)</h1>
+        </div>
+        """, unsafe_allow_html=True)
 
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
@@ -276,62 +298,99 @@ def load_ingredients_data():
         st.error(f"Error loading ingredients data: {str(e)}")
         return pd.DataFrame()
 
+# --- LOAD WPS DATA ---
+@st.cache_data(ttl=60)
+def load_wps_data():
+    """Load WPS data from sheet index 6 (7th sheet)"""
+    credentials = load_credentials()
+    if not credentials:
+        return pd.DataFrame()
+
+    try:
+        gc = gspread.authorize(credentials)
+        spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+        sh = gc.open_by_key(spreadsheet_id)
+
+        # Get sheet index 6 (seventh sheet)
+        worksheet = sh.get_worksheet(6)
+        data = worksheet.get_all_values()
+        
+        if len(data) < 2:
+            st.warning("Not enough data in sheet index 6")
+            return pd.DataFrame()
+
+        # Create DataFrame with headers from first row
+        df = pd.DataFrame(data[1:], columns=data[0])
+        
+        # Clean the data
+        df = df.replace('', pd.NA)
+        
+        return df
+
+    except Exception as e:
+        st.error(f"Error loading WPS data: {str(e)}")
+        return pd.DataFrame()
+
 # Load data
 subrecipe_df = load_subrecipe_data()
 batch_df = load_batch_data()
 ingredients_df = load_ingredients_data()
+wps_df = load_wps_data()
 
-if subrecipe_df.empty:
-    st.error("Unable to load subrecipe data. Please check your Google Sheets connection.")
-    st.stop()
+# Page routing
+if st.session_state.page == "subrecipe":
+    # SUBRECIPE GUIDE PAGE
+    if subrecipe_df.empty:
+        st.error("Unable to load subrecipe data. Please check your Google Sheets connection.")
+        st.stop()
 
-# Get subrecipe options from column A and deduplicate case-insensitively
-subrecipe_options = []
-if len(subrecipe_df.columns) > 0:
-    # Get the first column (A) and remove empty values
-    col_a_data = subrecipe_df.iloc[:, 0].dropna()
-    
-    # Create a dict to track unique normalized names and keep first occurrence
-    seen_normalized = {}
-    for item in col_a_data:
-        item_str = str(item).strip()
-        if item_str:
-            normalized = item_str.lower()
-            if normalized not in seen_normalized:
-                seen_normalized[normalized] = item_str
-    
-    subrecipe_options = list(seen_normalized.values())
+    # Get subrecipe options from column A and deduplicate case-insensitively
+    subrecipe_options = []
+    if len(subrecipe_df.columns) > 0:
+        # Get the first column (A) and remove empty values
+        col_a_data = subrecipe_df.iloc[:, 0].dropna()
+        
+        # Create a dict to track unique normalized names and keep first occurrence
+        seen_normalized = {}
+        for item in col_a_data:
+            item_str = str(item).strip()
+            if item_str:
+                normalized = item_str.lower()
+                if normalized not in seen_normalized:
+                    seen_normalized[normalized] = item_str
+        
+        subrecipe_options = list(seen_normalized.values())
 
-if not subrecipe_options:
-    st.error("No subrecipe options found in column A of sheet index 1")
-    st.stop()
+    if not subrecipe_options:
+        st.error("No subrecipe options found in column A of sheet index 1")
+        st.stop()
 
-# Controls
-col1, col2 = st.columns([2, 1])
+    # Controls
+    col1, col2 = st.columns([2, 1])
 
-with col1:
-    st.write("**Select Sub-Recipe:**")
-    selected_recipe = st.selectbox(
-        "Choose a subrecipe",
-        options=subrecipe_options,
-        key="recipe_selector",
-        label_visibility="collapsed"
-    )
+    with col1:
+        st.write("**Select Sub-Recipe:**")
+        selected_recipe = st.selectbox(
+            "Choose a subrecipe",
+            options=subrecipe_options,
+            key="recipe_selector",
+            label_visibility="collapsed"
+        )
 
-with col2:
-    st.write("**Batch Input:**")
-    batch_input = st.number_input(
-        "Batch quantity",
-        min_value=1,
-        max_value=1000,
-        value=1,
-        step=1,
-        key="batch_input",
-        label_visibility="collapsed"
-    )
+    with col2:
+        st.write("**Batch Input:**")
+        batch_input = st.number_input(
+            "Batch quantity",
+            min_value=1,
+            max_value=1000,
+            value=1,
+            step=1,
+            key="batch_input",
+            label_visibility="collapsed"
+        )
 
-# Calculate values based on selection
-if selected_recipe:
+    # Calculate values based on selection
+    if selected_recipe:
     # Normalize the selected recipe for matching
     selected_normalized = selected_recipe.strip().lower()
     
@@ -382,6 +441,8 @@ if selected_recipe:
             expected_packs = int(total_expected_output / pack_size)
         
         # Display results
+        st.markdown("---")
+        st.subheader("Batch Analytics")
         
         col1, col2, col3 = st.columns(3)
         
@@ -398,6 +459,8 @@ if selected_recipe:
             st.metric("Storage Condition", storage_condition)
         
         # Display Ingredients Table
+        st.markdown("---")
+        st.subheader("Ingredients Breakdown")
         
         if not ingredients_df.empty:
             # Filter ingredients for selected recipe (case-insensitive)
@@ -497,7 +560,7 @@ if selected_recipe:
                     .total-weight-box {
                         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
                         color: white;
-                        padding: 0.8rem 1.5rem;
+                        padding: 1.2rem 1.5rem;
                         border-radius: 8px;
                         display: inline-block;
                         margin-top: 1rem;
@@ -529,7 +592,7 @@ if selected_recipe:
                     # Calculate total weight and display in two columns
                     total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
                     
-                    col_left, col_right = st.columns([3, 1])
+                    col_left, col_right = st.columns([1, 1])
                     
                     with col_right:
                         st.markdown(f"""
@@ -549,6 +612,11 @@ if selected_recipe:
 
 else:
     st.info("Please select a subrecipe to see the analytics")
+
+# Refresh button
+if st.button("Refresh Data"):
+    st.cache_data.clear()
+    st.rerun()
 
 # Footer
 st.markdown("---")
