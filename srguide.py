@@ -123,35 +123,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Header with navigation
-col_nav1, col_nav2 = st.columns([1, 1])
-
-with col_nav1:
-    if st.button("📋 Subrecipe Guide", use_container_width=True):
-        st.session_state.page = "subrecipe"
-
-with col_nav2:
-    if st.button("📊 WPS", use_container_width=True):
-        st.session_state.page = "wps"
-
-# Initialize page state
-if 'page' not in st.session_state:
-    st.session_state.page = "subrecipe"
-
-# Display appropriate header based on page
-if st.session_state.page == "subrecipe":
-    st.markdown("""
-        <div class="main-header">
-            <h1>Commissary Subrecipe Guide</h1>
-        </div>
-        """, unsafe_allow_html=True)
-else:
-    st.markdown("""
-        <div class="main-header">
-            <h1>WPS</h1>
-        </div>
-        """, unsafe_allow_html=True)
-
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
 def load_credentials():
@@ -297,6 +268,35 @@ def load_ingredients_data():
     except Exception as e:
         st.error(f"Error loading ingredients data: {str(e)}")
         return pd.DataFrame()
+
+# Header with navigation
+col_nav1, col_nav2 = st.columns([1, 1])
+
+with col_nav1:
+    if st.button("📋 Subrecipe Guide", use_container_width=True):
+        st.session_state.page = "subrecipe"
+
+with col_nav2:
+    if st.button("📊 WPS", use_container_width=True):
+        st.session_state.page = "wps"
+
+# Initialize page state
+if 'page' not in st.session_state:
+    st.session_state.page = "subrecipe"
+
+# Display appropriate header based on page
+if st.session_state.page == "subrecipe":
+    st.markdown("""
+        <div class="main-header">
+            <h1>Commissary Subrecipe Guide</h1>
+        </div>
+        """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+        <div class="main-header">
+            <h1>WPS</h1>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Load data
 subrecipe_df = load_subrecipe_data()
