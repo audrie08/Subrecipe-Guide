@@ -645,6 +645,17 @@ elif st.session_state.page == "wps":
     else:
         st.subheader("Work Planning System")
         
+        # Debug: Show data info
+        with st.expander("🔍 Debug Information"):
+            st.write(f"**Total rows loaded:** {len(wps_df)}")
+            st.write(f"**Total columns loaded:** {len(wps_df.columns)}")
+            st.write(f"**Column names:** {list(wps_df.columns[:25])}")  # Show first 25 columns
+            st.write(f"**First 5 rows of Column A:**")
+            st.write(wps_df.iloc[:5, 0].tolist())
+            st.write(f"**Sample batch columns (P-V, indices 15-21):**")
+            if len(wps_df.columns) > 21:
+                st.write(wps_df.iloc[:5, 15:22])
+        
         # Get Column A (Subrecipe) and Columns P-V (Batches)
         # Column A is index 0, Columns P-V are indices 15-21
         if len(wps_df.columns) > 21:
@@ -668,6 +679,8 @@ elif st.session_state.page == "wps":
             # Select columns A and P-V
             display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
             
+            st.write(f"**After selecting columns - Rows:** {len(display_df)}")
+            
             # Rename columns
             column_names = ['Subrecipe'] + batch_headers
             display_df.columns = column_names
@@ -675,6 +688,8 @@ elif st.session_state.page == "wps":
             # Remove rows where Column A is empty
             display_df = display_df[display_df.iloc[:, 0].notna()]
             display_df = display_df[display_df.iloc[:, 0] != '']
+            
+            st.write(f"**After removing empty subrecipes - Rows:** {len(display_df)}")
             
             # Normalize subrecipe names for filtering
             display_df['_normalized'] = display_df['Subrecipe'].str.strip().str.lower()
@@ -687,6 +702,8 @@ elif st.session_state.page == "wps":
             
             for term in exclude_terms:
                 display_df = display_df[display_df['_normalized'] != term]
+            
+            st.write(f"**After removing excluded terms - Rows:** {len(display_df)}")
             
             # Remove rows where all batch columns are empty, zero, or -.0
             batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
@@ -713,6 +730,8 @@ elif st.session_state.page == "wps":
                 return False
             
             display_df = display_df[display_df.apply(has_valid_batch, axis=1)]
+            
+            st.write(f"**After filtering invalid batches - Rows:** {len(display_df)}")
             
             # Drop the normalized column for display
             display_df = display_df.drop(columns=['_normalized'])
@@ -784,3 +803,16 @@ elif st.session_state.page == "wps":
                 )
                 
                 # Wrap table in container
+                table_html = f"""
+                <div class="wps-table-container">
+                    {html_table}
+                </div>
+                """
+                
+                st.markdown(table_html, unsafe_allow_html=True)
+                
+                st.info(f"Total subrecipes: {len(display_df)}")
+            else:
+                st.warning("No valid WPS data found after filtering")
+        else:
+            st.error(f"Not enough columns in WPS data. Found {len(wps_df.columns)} columns, need at least 22.")
