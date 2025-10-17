@@ -1,15 +1,4 @@
-# Remove rows where all batch columns are empty, zero, or .0
-            batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
-            
-            def has_valid_batch(row):
-                for col in batch_cols:
-                    val = str(row[col]).strip()
-                    # Check if value is not empty
-                    if val and val != '':
-                        # Remove any leading/trailing dashes and dots
-                        cleaned_val = val.replace('-', '').replace(' ', '')
-                        
-                        # Skip if it's just dotsimport streamlit as st
+import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
@@ -317,7 +306,7 @@ def load_ingredients_data():
 # --- LOAD WPS DATA ---
 @st.cache_data(ttl=60)
 def load_wps_data():
-    """Load WPS data from sheet index 6 (7th sheet)"""
+    """Load WPS data from sheet index 5 (6th sheet)"""
     credentials = load_credentials()
     if not credentials:
         return pd.DataFrame()
@@ -327,12 +316,12 @@ def load_wps_data():
         spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
         sh = gc.open_by_key(spreadsheet_id)
 
-        # Get sheet index 6 (seventh sheet)
-        worksheet = sh.get_worksheet(6)
+        # Get sheet index 5 (6th sheet)
+        worksheet = sh.get_worksheet(5)
         data = worksheet.get_all_values()
         
         if len(data) < 11:
-            st.warning("Not enough data in sheet index 6")
+            st.warning("Not enough data in sheet index 5")
             return pd.DataFrame()
 
         # Header starts at row 10 (index 9), data starts at row 11 (index 10)
@@ -659,7 +648,7 @@ elif st.session_state.page == "wps":
         # Get Column A (Subrecipe) and Columns P-V (Batches)
         # Column A is index 0, Columns P-V are indices 15-21
         if len(wps_df.columns) > 21:
-            # Get the actual headers from row 10 (index 9)
+            # Get the actual headers from row 10 (index 9) from sheet index 5
             credentials = load_credentials()
             if credentials:
                 try:
@@ -699,14 +688,28 @@ elif st.session_state.page == "wps":
             for term in exclude_terms:
                 display_df = display_df[display_df['_normalized'] != term]
             
-            # Remove rows where all batch columns are empty or zero
+            # Remove rows where all batch columns are empty, zero, or -.0
             batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
             
             def has_valid_batch(row):
                 for col in batch_cols:
                     val = str(row[col]).strip()
-                    if val and val != '' and val != '0' and val != '0.0':
-                        return True
+                    # Check if value is not empty
+                    if val and val != '':
+                        # List of invalid values to skip
+                        invalid_values = ['0', '0.0', '.0', '0.00', '.00', '-.0', '-0', '-0.0', '- .0']
+                        
+                        if val in invalid_values:
+                            continue
+                            
+                        # Try to convert to float and check if it's greater than 0
+                        try:
+                            num_val = float(val.replace(' ', ''))
+                            if num_val > 0:
+                                return True
+                        except (ValueError, TypeError):
+                            # If can't convert to number, it might be text, keep it
+                            return True
                 return False
             
             display_df = display_df[display_df.apply(has_valid_batch, axis=1)]
@@ -781,24 +784,3 @@ elif st.session_state.page == "wps":
                 )
                 
                 # Wrap table in container
-                table_html = f"""
-                <div class="wps-table-container">
-                    {html_table}
-                </div>
-                """
-                
-                st.markdown(table_html, unsafe_allow_html=True)
-                
-                st.info(f"Total subrecipes: {len(display_df)}")
-            else:
-                st.warning("No valid WPS data found after filtering")
-        else:
-            st.error("Not enough columns in WPS data")
-
-# Footer
-st.markdown("---")
-st.markdown("""
-    <div style="text-align: center; color: #6a6a6a; font-size: 0.9rem; padding: 2rem 0 1rem 0;">
-        Subrecipe Guide 2025
-    </div>
-    """, unsafe_allow_html=True)
