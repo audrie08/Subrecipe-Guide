@@ -306,7 +306,7 @@ def load_ingredients_data():
 # --- LOAD WPS DATA ---
 @st.cache_data(ttl=60)
 def load_wps_data():
-    """Load WPS data from sheet index 6 (7th sheet)"""
+    """Load WPS data from sheet index 5 (6th sheet)"""
     credentials = load_credentials()
     if not credentials:
         return pd.DataFrame()
@@ -316,12 +316,12 @@ def load_wps_data():
         spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
         sh = gc.open_by_key(spreadsheet_id)
 
-        # Get sheet index 6 (seventh sheet)
-        worksheet = sh.get_worksheet(6)
+        # Get sheet index 5 (seventh sheet)
+        worksheet = sh.get_worksheet(5)
         data = worksheet.get_all_values()
         
         if len(data) < 11:
-            st.warning("Not enough data in sheet index 6")
+            st.warning("Not enough data in sheet index 5")
             return pd.DataFrame()
 
         # Header starts at row 10 (index 9), data starts at row 11 (index 10)
