@@ -306,7 +306,7 @@ def load_ingredients_data():
 # --- LOAD WPS DATA ---
 @st.cache_data(ttl=60)
 def load_wps_data():
-    """Load WPS data from sheet index 5 (6th sheet)"""
+    """Load WPS data from sheet index 6 (7th sheet)"""
     credentials = load_credentials()
     if not credentials:
         return pd.DataFrame()
@@ -316,12 +316,12 @@ def load_wps_data():
         spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
         sh = gc.open_by_key(spreadsheet_id)
 
-        # Get sheet index 5 (seventh sheet)
-        worksheet = sh.get_worksheet(5)
+        # Get sheet index 6 (seventh sheet)
+        worksheet = sh.get_worksheet(6)
         data = worksheet.get_all_values()
         
         if len(data) < 11:
-            st.warning("Not enough data in sheet index 5")
+            st.warning("Not enough data in sheet index 6")
             return pd.DataFrame()
 
         # Header starts at row 10 (index 9), data starts at row 11 (index 10)
@@ -648,16 +648,60 @@ elif st.session_state.page == "wps":
         # Get Column A (Subrecipe) and Columns P-V (Batches)
         # Column A is index 0, Columns P-V are indices 15-21
         if len(wps_df.columns) > 21:
+            # Get the actual headers from row 10 (index 9)
+            credentials = load_credentials()
+            if credentials:
+                try:
+                    gc = gspread.authorize(credentials)
+                    spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+                    sh = gc.open_by_key(spreadsheet_id)
+                    worksheet = sh.get_worksheet(5)
+                    header_row = worksheet.get_all_values()[9]
+                    
+                    # Get headers for columns P-V (indices 15-21)
+                    batch_headers = [header_row[i] if i < len(header_row) else f'Batch {i-14}' for i in range(15, 22)]
+                except:
+                    batch_headers = [f'Batch {i}' for i in range(1, 8)]
+            else:
+                batch_headers = [f'Batch {i}' for i in range(1, 8)]
+            
             # Select columns A and P-V
             display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
+            
+            # Rename columns
+            column_names = ['Subrecipe'] + batch_headers
+            display_df.columns = column_names
             
             # Remove rows where Column A is empty
             display_df = display_df[display_df.iloc[:, 0].notna()]
             display_df = display_df[display_df.iloc[:, 0] != '']
             
-            # Rename columns for better display
-            column_names = ['Subrecipe'] + [f'Batch {i}' for i in range(1, 8)]
-            display_df.columns = column_names
+            # Normalize subrecipe names for filtering
+            display_df['_normalized'] = display_df['Subrecipe'].str.strip().str.lower()
+            
+            # Remove specific rows
+            exclude_terms = [
+                'hot kitchen', 'hot kitchen sauce', 'hot kitchen savory', 
+                'cold sauce', 'fabrication poultry', 'fabrication meats', 'pastry'
+            ]
+            
+            for term in exclude_terms:
+                display_df = display_df[display_df['_normalized'] != term]
+            
+            # Remove rows where all batch columns are empty or zero
+            batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
+            
+            def has_valid_batch(row):
+                for col in batch_cols:
+                    val = str(row[col]).strip()
+                    if val and val != '' and val != '0' and val != '0.0':
+                        return True
+                return False
+            
+            display_df = display_df[display_df.apply(has_valid_batch, axis=1)]
+            
+            # Drop the normalized column for display
+            display_df = display_df.drop(columns=['_normalized'])
             
             if not display_df.empty:
                 # Add CSS styling
@@ -736,7 +780,7 @@ elif st.session_state.page == "wps":
                 
                 st.info(f"Total subrecipes: {len(display_df)}")
             else:
-                st.warning("No valid WPS data found")
+                st.warning("No valid WPS data found after filtering")
         else:
             st.error("Not enough columns in WPS data")
 
