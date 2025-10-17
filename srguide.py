@@ -148,7 +148,7 @@ if st.session_state.page == "subrecipe":
 else:
     st.markdown("""
         <div class="main-header">
-            <h1>Work Planning System (WPS)</h1>
+            <h1>WPS</h1>
         </div>
         """, unsafe_allow_html=True)
 
