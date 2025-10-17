@@ -403,17 +403,17 @@ if st.session_state.page == "subrecipe":
 
     # Calculate values based on selection
     if selected_recipe:
-    # Normalize the selected recipe for matching
-    selected_normalized = selected_recipe.strip().lower()
-    
-    # Find the row for selected recipe (case-insensitive)
-    recipe_row = subrecipe_df[subrecipe_df['_normalized_name'] == selected_normalized]
-    
-    if not recipe_row.empty:
-        recipe_data = recipe_row.iloc[0]
+        # Normalize the selected recipe for matching
+        selected_normalized = selected_recipe.strip().lower()
         
-        # Extract values from specific columns
-        try:
+        # Find the row for selected recipe (case-insensitive)
+        recipe_row = subrecipe_df[subrecipe_df['_normalized_name'] == selected_normalized]
+        
+        if not recipe_row.empty:
+            recipe_data = recipe_row.iloc[0]
+            
+            # Extract values from specific columns
+            try:
             # Pack Size (col G = index 6)
             pack_size = 0
             if len(recipe_data) > 6 and pd.notna(recipe_data.iloc[6]):
@@ -474,43 +474,43 @@ if st.session_state.page == "subrecipe":
         st.markdown("---")
         st.subheader("Ingredients Breakdown")
         
-        if not ingredients_df.empty:
-            # Filter ingredients for selected recipe (case-insensitive)
-            recipe_ingredients = ingredients_df[ingredients_df['_normalized_subrecipe'] == selected_normalized].copy()
-            
-            if not recipe_ingredients.empty:
-                # Remove duplicates based on subrecipe + ingredient combination
-                recipe_ingredients = recipe_ingredients.drop_duplicates(
-                    subset=['_normalized_subrecipe', '_normalized_ingredient'],
-                    keep='first'
-                )
+            if not ingredients_df.empty:
+                # Filter ingredients for selected recipe (case-insensitive)
+                recipe_ingredients = ingredients_df[ingredients_df['_normalized_subrecipe'] == selected_normalized].copy()
                 
-                # Prepare display data
-                ingredients_display = []
-                for idx, row in recipe_ingredients.iterrows():
-                    ingredient_name = row.iloc[1] if pd.notna(row.iloc[1]) else "N/A"  # Column B
-                    qty_conversion = 0
+                if not recipe_ingredients.empty:
+                    # Remove duplicates based on subrecipe + ingredient combination
+                    recipe_ingredients = recipe_ingredients.drop_duplicates(
+                        subset=['_normalized_subrecipe', '_normalized_ingredient'],
+                        keep='first'
+                    )
                     
-                    # Get quantity conversion from Column D (index 3)
-                    if len(row) > 3 and pd.notna(row.iloc[3]):
-                        try:
-                            qty_conversion = float(row.iloc[3])
-                        except (ValueError, TypeError):
-                            qty_conversion = 0
+                    # Prepare display data
+                    ingredients_display = []
+                    for idx, row in recipe_ingredients.iterrows():
+                        ingredient_name = row.iloc[1] if pd.notna(row.iloc[1]) else "N/A"  # Column B
+                        qty_conversion = 0
+                        
+                        # Get quantity conversion from Column D (index 3)
+                        if len(row) > 3 and pd.notna(row.iloc[3]):
+                            try:
+                                qty_conversion = float(row.iloc[3])
+                            except (ValueError, TypeError):
+                                qty_conversion = 0
+                        
+                        # Calculate total quantity (multiply by batch input)
+                        total_qty = qty_conversion * batch_input
+                        
+                        # Only add if qty_conversion is not 0
+                        if qty_conversion != 0:
+                            ingredients_display.append({
+                                "Ingredient": ingredient_name,
+                                "Qty per Batch (KG)": f"{qty_conversion:.3f}",
+                                "Total Qty (KG)": f"{total_qty:.3f}",
+                                "UOM": "KG"
+                            })
                     
-                    # Calculate total quantity (multiply by batch input)
-                    total_qty = qty_conversion * batch_input
-                    
-                    # Only add if qty_conversion is not 0
-                    if qty_conversion != 0:
-                        ingredients_display.append({
-                            "Ingredient": ingredient_name,
-                            "Qty per Batch (KG)": f"{qty_conversion:.3f}",
-                            "Total Qty (KG)": f"{total_qty:.3f}",
-                            "UOM": "KG"
-                        })
-                
-                if ingredients_display:
+                    if ingredients_display:
                     # Convert to DataFrame
                     df_display = pd.DataFrame(ingredients_display)
                     
@@ -625,10 +625,6 @@ if st.session_state.page == "subrecipe":
 else:
     st.info("Please select a subrecipe to see the analytics")
 
-# Refresh button
-if st.button("Refresh Data"):
-    st.cache_data.clear()
-    st.rerun()
 
 # Footer
 st.markdown("---")
