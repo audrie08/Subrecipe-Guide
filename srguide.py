@@ -466,8 +466,6 @@ if st.session_state.page == "subrecipe":
                 expected_packs = int(total_expected_output / pack_size)
             
             # Display results
-            st.markdown("---")
-            st.subheader("Batch Analytics")
             
             col1, col2, col3 = st.columns(3)
             
@@ -484,8 +482,6 @@ if st.session_state.page == "subrecipe":
                 st.metric("Storage Condition", storage_condition)
             
             # Display Ingredients Table
-            st.markdown("---")
-            st.subheader("Ingredients Breakdown")
             
             if not ingredients_df.empty:
                 # Filter ingredients for selected recipe (case-insensitive)
@@ -585,7 +581,7 @@ if st.session_state.page == "subrecipe":
                         .total-weight-box {
                             background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
                             color: white;
-                            padding: 1.2rem 1.5rem;
+                            padding: 0.5rem 1.5rem;
                             border-radius: 8px;
                             display: inline-block;
                             margin-top: 1rem;
