@@ -1,4 +1,15 @@
-import streamlit as st
+# Remove rows where all batch columns are empty, zero, or .0
+            batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
+            
+            def has_valid_batch(row):
+                for col in batch_cols:
+                    val = str(row[col]).strip()
+                    # Check if value is not empty
+                    if val and val != '':
+                        # Remove any leading/trailing dashes and dots
+                        cleaned_val = val.replace('-', '').replace(' ', '')
+                        
+                        # Skip if it's just dotsimport streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
@@ -317,7 +328,7 @@ def load_wps_data():
         sh = gc.open_by_key(spreadsheet_id)
 
         # Get sheet index 6 (seventh sheet)
-        worksheet = sh.get_worksheet(5)
+        worksheet = sh.get_worksheet(6)
         data = worksheet.get_all_values()
         
         if len(data) < 11:
