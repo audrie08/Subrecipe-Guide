@@ -146,11 +146,11 @@ st.markdown("""
 col_nav1, col_nav2 = st.columns([1, 1])
 
 with col_nav1:
-    if st.button("📋 Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
+    if st.button("Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("📊 WPS", use_container_width=True, key="nav_wps"):
+    if st.button("WPS", use_container_width=True, key="nav_wps"):
         st.session_state.page = "wps"
 
 # Initialize page state
