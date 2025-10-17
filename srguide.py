@@ -146,11 +146,11 @@ st.markdown("""
 col_nav1, col_nav2 = st.columns([1, 1])
 
 with col_nav1:
-    if st.button("Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
+    if st.button("📋 Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("WPS", use_container_width=True, key="nav_wps"):
+    if st.button("📊 WPS", use_container_width=True, key="nav_wps"):
         st.session_state.page = "wps"
 
 # Initialize page state
@@ -306,7 +306,7 @@ def load_ingredients_data():
 # --- LOAD WPS DATA ---
 @st.cache_data(ttl=60)
 def load_wps_data():
-    """Load WPS data from sheet index 5 (6th sheet)"""
+    """Load WPS data from sheet index 6 (7th sheet)"""
     credentials = load_credentials()
     if not credentials:
         return pd.DataFrame()
@@ -316,16 +316,36 @@ def load_wps_data():
         spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
         sh = gc.open_by_key(spreadsheet_id)
 
-        # Get sheet index 5 (seventh sheet)
-        worksheet = sh.get_worksheet(5)
+        # Get sheet index 6 (seventh sheet)
+        worksheet = sh.get_worksheet(6)
         data = worksheet.get_all_values()
         
-        if len(data) < 2:
-            st.warning("Not enough data in sheet index 5")
+        if len(data) < 11:
+            st.warning("Not enough data in sheet index 6")
             return pd.DataFrame()
 
-        # Create DataFrame with headers from first row
-        df = pd.DataFrame(data[1:], columns=data[0])
+        # Header starts at row 10 (index 9), data starts at row 11 (index 10)
+        headers = data[9]
+        data_rows = data[10:]
+        
+        # Handle duplicate column names by adding suffixes
+        seen = {}
+        unique_headers = []
+        for header in headers:
+            if header == '' or header in seen:
+                # For empty or duplicate headers, create unique names
+                count = seen.get(header, 0)
+                seen[header] = count + 1
+                if header == '':
+                    unique_headers.append(f'Column_{len(unique_headers)}')
+                else:
+                    unique_headers.append(f'{header}_{count}')
+            else:
+                unique_headers.append(header)
+                seen[header] = 1
+        
+        # Create DataFrame with unique headers
+        df = pd.DataFrame(data_rows, columns=unique_headers)
         
         # Clean the data
         df = df.replace('', pd.NA)
