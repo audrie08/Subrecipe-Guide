@@ -157,13 +157,6 @@ with col_nav2:
 if 'page' not in st.session_state:
     st.session_state.page = "subrecipe"
 
-# Header
-st.markdown("""
-    <div class="main-header">
-        <h1>Commissary Subrecipe Guide</h1>
-    </div>
-    """, unsafe_allow_html=True)
-
 # --- CREDENTIALS HANDLING ---
 @st.cache_resource
 def load_credentials():
@@ -414,66 +407,66 @@ if st.session_state.page == "subrecipe":
             
             # Extract values from specific columns
             try:
-            # Pack Size (col G = index 6)
-            pack_size = 0
-            if len(recipe_data) > 6 and pd.notna(recipe_data.iloc[6]):
-                pack_size = float(recipe_data.iloc[6])
+                # Pack Size (col G = index 6)
+                pack_size = 0
+                if len(recipe_data) > 6 and pd.notna(recipe_data.iloc[6]):
+                    pack_size = float(recipe_data.iloc[6])
+                
+                # Shelf Life (col H = index 7)
+                shelf_life = 0
+                if len(recipe_data) > 7 and pd.notna(recipe_data.iloc[7]):
+                    shelf_life = int(float(recipe_data.iloc[7]))
+                
+                # Storage Condition (col I = index 8)
+                storage_condition = "Not specified"
+                if len(recipe_data) > 8 and pd.notna(recipe_data.iloc[8]):
+                    storage_condition = str(recipe_data.iloc[8])
+                
+            except (ValueError, IndexError) as e:
+                st.warning(f"Error parsing recipe data: {e}")
+                pack_size = 0
+                shelf_life = 0
+                storage_condition = "Not specified"
             
-            # Shelf Life (col H = index 7)
-            shelf_life = 0
-            if len(recipe_data) > 7 and pd.notna(recipe_data.iloc[7]):
-                shelf_life = int(float(recipe_data.iloc[7]))
+            # Get Batch Output from sheet index 4, column C (case-insensitive match)
+            batch_output = 0
+            if not batch_df.empty:
+                # Find matching recipe in batch data using normalized names
+                batch_row = batch_df[batch_df['_normalized_name'] == selected_normalized]
+                if not batch_row.empty and len(batch_row.iloc[0]) > 2:
+                    try:
+                        batch_output = float(batch_row.iloc[0].iloc[2])  # Column C = index 2
+                    except (ValueError, IndexError):
+                        batch_output = 0
             
-            # Storage Condition (col I = index 8)
-            storage_condition = "Not specified"
-            if len(recipe_data) > 8 and pd.notna(recipe_data.iloc[8]):
-                storage_condition = str(recipe_data.iloc[8])
+            # Calculate derived values
+            total_expected_output = batch_output * batch_input
+            expected_packs = 0
+            if pack_size > 0:
+                expected_packs = int(total_expected_output / pack_size)
             
-        except (ValueError, IndexError) as e:
-            st.warning(f"Error parsing recipe data: {e}")
-            pack_size = 0
-            shelf_life = 0
-            storage_condition = "Not specified"
-        
-        # Get Batch Output from sheet index 4, column C (case-insensitive match)
-        batch_output = 0
-        if not batch_df.empty:
-            # Find matching recipe in batch data using normalized names
-            batch_row = batch_df[batch_df['_normalized_name'] == selected_normalized]
-            if not batch_row.empty and len(batch_row.iloc[0]) > 2:
-                try:
-                    batch_output = float(batch_row.iloc[0].iloc[2])  # Column C = index 2
-                except (ValueError, IndexError):
-                    batch_output = 0
-        
-        # Calculate derived values
-        total_expected_output = batch_output * batch_input
-        expected_packs = 0
-        if pack_size > 0:
-            expected_packs = int(total_expected_output / pack_size)
-        
-        # Display results
-        st.markdown("---")
-        st.subheader("Batch Analytics")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Batch Output (KG)", f"{batch_output:.2f}")
-            st.metric("Total Expected Output (KG)", f"{total_expected_output:.2f}")
-        
-        with col2:
-            st.metric("Pack Size (KG)", f"{pack_size:.2f}")
-            st.metric("Expected Total No. of Packs", expected_packs)
-        
-        with col3:
-            st.metric("Shelf Life (days)", shelf_life)
-            st.metric("Storage Condition", storage_condition)
-        
-        # Display Ingredients Table
-        st.markdown("---")
-        st.subheader("Ingredients Breakdown")
-        
+            # Display results
+            st.markdown("---")
+            st.subheader("Batch Analytics")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Batch Output (KG)", f"{batch_output:.2f}")
+                st.metric("Total Expected Output (KG)", f"{total_expected_output:.2f}")
+            
+            with col2:
+                st.metric("Pack Size (KG)", f"{pack_size:.2f}")
+                st.metric("Expected Total No. of Packs", expected_packs)
+            
+            with col3:
+                st.metric("Shelf Life (days)", shelf_life)
+                st.metric("Storage Condition", storage_condition)
+            
+            # Display Ingredients Table
+            st.markdown("---")
+            st.subheader("Ingredients Breakdown")
+            
             if not ingredients_df.empty:
                 # Filter ingredients for selected recipe (case-insensitive)
                 recipe_ingredients = ingredients_df[ingredients_df['_normalized_subrecipe'] == selected_normalized].copy()
@@ -511,124 +504,135 @@ if st.session_state.page == "subrecipe":
                             })
                     
                     if ingredients_display:
-                    # Convert to DataFrame
-                    df_display = pd.DataFrame(ingredients_display)
-                    
-                    # Add CSS styling first
-                    st.markdown("""
-                    <style>
-                    .ingredients-table-container {
-                        border-radius: 12px;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-                        margin: 20px 0;
-                        overflow: hidden;
-                    }
-                    .ingredients-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        font-size: 14px;
-                        background: white;
-                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                        margin: 0;
-                    }
-                    .ingredients-table thead {
-                        background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-                    }
-                    .ingredients-table th {
-                        color: #ffffff;
-                        font-weight: 600;
-                        padding: 1rem;
-                        text-align: left;
-                        border: none;
-                        font-size: 0.9rem;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                    }
-                    .ingredients-table td {
-                        padding: 1rem;
-                        color: #4a4a4a;
-                        border-top: 1px solid #e8e8e8;
-                        vertical-align: middle;
-                        text-align: left;
-                    }
-                    .ingredients-table tbody tr {
-                        background: white;
-                        transition: background 0.2s ease;
-                    }
-                    .ingredients-table tbody tr:nth-child(even) {
-                        background: #fafafa;
-                    }
-                    .ingredients-table tbody tr:hover {
-                        background: #fff9e6;
-                    }
-                    .ingredients-table tr:last-child td {
-                        border-bottom: none;
-                    }
-                    /* Bold the Ingredient and Total Qty columns */
-                    .ingredients-table td:nth-child(1),
-                    .ingredients-table td:nth-child(3) {
-                        font-weight: 700;
-                    }
-                    .total-weight-box {
-                        background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
-                        color: white;
-                        padding: 1.2rem 1.5rem;
-                        border-radius: 8px;
-                        display: inline-block;
-                        margin-top: 1rem;
-                    }
-                    .total-weight-box .weight-label {
-                        font-weight: 700;
-                        color: #fbbf24;
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
-                    
-                    # Convert DataFrame to HTML
-                    html_table = df_display.to_html(
-                        escape=False,
-                        index=False,
-                        classes='ingredients-table',
-                        table_id='ingredients-table'
-                    )
-                    
-                    # Wrap table in container
-                    table_html = f"""
-                    <div class="ingredients-table-container">
-                        {html_table}
-                    </div>
-                    """
-                    
-                    st.markdown(table_html, unsafe_allow_html=True)
-                    
-                    # Calculate total weight and display in two columns
-                    total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
-                    
-                    col_left, col_right = st.columns([3, 1])
-                    
-                    with col_right:
-                        st.markdown(f"""
-                            <div class="total-weight-box">
-                                <span class="weight-label">Total Volume:</span> {total_weight:.3f} KG
-                            </div>
+                        # Convert to DataFrame
+                        df_display = pd.DataFrame(ingredients_display)
+                        
+                        # Add CSS styling first
+                        st.markdown("""
+                        <style>
+                        .ingredients-table-container {
+                            border-radius: 12px;
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                            margin: 20px 0;
+                            overflow: hidden;
+                        }
+                        .ingredients-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 14px;
+                            background: white;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                            margin: 0;
+                        }
+                        .ingredients-table thead {
+                            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+                        }
+                        .ingredients-table th {
+                            color: #ffffff;
+                            font-weight: 600;
+                            padding: 1rem;
+                            text-align: left;
+                            border: none;
+                            font-size: 0.9rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        }
+                        .ingredients-table td {
+                            padding: 1rem;
+                            color: #4a4a4a;
+                            border-top: 1px solid #e8e8e8;
+                            vertical-align: middle;
+                            text-align: left;
+                        }
+                        .ingredients-table tbody tr {
+                            background: white;
+                            transition: background 0.2s ease;
+                        }
+                        .ingredients-table tbody tr:nth-child(even) {
+                            background: #fafafa;
+                        }
+                        .ingredients-table tbody tr:hover {
+                            background: #fff9e6;
+                        }
+                        .ingredients-table tr:last-child td {
+                            border-bottom: none;
+                        }
+                        /* Bold the Ingredient and Total Qty columns */
+                        .ingredients-table td:nth-child(1),
+                        .ingredients-table td:nth-child(3) {
+                            font-weight: 700;
+                        }
+                        .total-weight-box {
+                            background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
+                            color: white;
+                            padding: 1.2rem 1.5rem;
+                            border-radius: 8px;
+                            display: inline-block;
+                            margin-top: 1rem;
+                        }
+                        .total-weight-box .weight-label {
+                            font-weight: 700;
+                            color: #fbbf24;
+                        }
+                        </style>
                         """, unsafe_allow_html=True)
+                        
+                        # Convert DataFrame to HTML
+                        html_table = df_display.to_html(
+                            escape=False,
+                            index=False,
+                            classes='ingredients-table',
+                            table_id='ingredients-table'
+                        )
+                        
+                        # Wrap table in container
+                        table_html = f"""
+                        <div class="ingredients-table-container">
+                            {html_table}
+                        </div>
+                        """
+                        
+                        st.markdown(table_html, unsafe_allow_html=True)
+                        
+                        # Calculate total weight and display in two columns
+                        total_weight = sum([float(item["Total Qty (KG)"]) for item in ingredients_display])
+                        
+                        col_left, col_right = st.columns([3, 1])
+                        
+                        with col_right:
+                            st.markdown(f"""
+                                <div class="total-weight-box">
+                                    <span class="weight-label">Total Volume:</span> {total_weight:.3f} KG
+                                </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.warning("No valid ingredient data found for this recipe")
                 else:
-                    st.warning("No valid ingredient data found for this recipe")
+                    st.warning(f"No ingredients found for '{selected_recipe}'")
             else:
-                st.warning(f"No ingredients found for '{selected_recipe}'")
+                st.error("Unable to load ingredients data")
+        
         else:
-            st.error("Unable to load ingredients data")
-    
+            st.error(f"Recipe '{selected_recipe}' not found in the data")
+
     else:
-        st.error(f"Recipe '{selected_recipe}' not found in the data")
+        st.info("Please select a subrecipe to see the analytics")
 
-else:
-    st.info("Please select a subrecipe to see the analytics")
-
-# Refresh button
-if st.button("Refresh Data"):
-    st.cache_data.clear()
-    st.rerun()
+elif st.session_state.page == "wps":
+    # WPS PAGE
+    if wps_df.empty:
+        st.error("Unable to load WPS data. Please check your Google Sheets connection.")
+    else:
+        st.subheader("Work Planning System Data")
+        
+        # Display WPS data
+        st.dataframe(
+            wps_df,
+            use_container_width=True,
+            hide_index=True
+        )
+        
+        st.info(f"Total records: {len(wps_df)}")
 
 # Footer
 st.markdown("---")
