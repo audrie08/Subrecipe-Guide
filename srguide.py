@@ -780,6 +780,18 @@ elif st.session_state.page == "wps":
                     .wps-table td:first-child {
                         font-weight: 700;
                     }
+                    .total-weight-box {
+                        background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
+                        color: white;
+                        padding: 1.2rem 1.5rem;
+                        border-radius: 8px;
+                        display: inline-block;
+                        margin-top: 1rem;
+                    }
+                    .total-weight-box .weight-label {
+                        font-weight: 700;
+                        color: #fbbf24;
+                    }
                     </style>
                     """, unsafe_allow_html=True)
                     
@@ -802,8 +814,9 @@ elif st.session_state.page == "wps":
                 with col_right:
                     st.markdown("### Raw Materials Explosion")
                     
-                    # Aggregate ingredients for all subrecipes
+                    # Aggregate ingredients maintaining subrecipe order
                     all_ingredients = {}
+                    ingredient_order = []  # Track order of first appearance
                     
                     for idx, row in display_df.iterrows():
                         subrecipe_name = row['Subrecipe']
@@ -835,16 +848,17 @@ elif st.session_state.page == "wps":
                                 if qty_conversion > 0:
                                     total_qty = qty_conversion * total_batches
                                     
-                                    if ingredient_name in all_ingredients:
-                                        all_ingredients[ingredient_name] += total_qty
-                                    else:
+                                    if ingredient_name not in all_ingredients:
+                                        ingredient_order.append(ingredient_name)
                                         all_ingredients[ingredient_name] = total_qty
+                                    else:
+                                        all_ingredients[ingredient_name] += total_qty
                     
-                    # Display aggregated ingredients
+                    # Display aggregated ingredients in order of appearance
                     if all_ingredients:
                         ingredients_list = [
-                            {"Raw Material": name, "Total Qty (KG)": f"{qty:.3f}"}
-                            for name, qty in sorted(all_ingredients.items())
+                            {"Raw Material": name, "Total Qty (KG)": f"{all_ingredients[name]:.3f}"}
+                            for name in ingredient_order
                         ]
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
