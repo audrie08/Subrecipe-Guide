@@ -649,8 +649,6 @@ elif st.session_state.page == "wps":
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
     else:
-        st.subheader("")
-        
         if len(wps_df.columns) > 21:
             # Get the actual headers
             credentials = load_credentials()
