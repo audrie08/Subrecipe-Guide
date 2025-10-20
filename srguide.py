@@ -780,18 +780,6 @@ elif st.session_state.page == "wps":
                     .wps-table td:first-child {
                         font-weight: 700;
                     }
-                    .total-weight-box {
-                        background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
-                        color: white;
-                        padding: 1.2rem 1.5rem;
-                        border-radius: 8px;
-                        display: inline-block;
-                        margin-top: 1rem;
-                    }
-                    .total-weight-box .weight-label {
-                        font-weight: 700;
-                        color: #fbbf24;
-                    }
                     </style>
                     """, unsafe_allow_html=True)
                     
@@ -814,9 +802,8 @@ elif st.session_state.page == "wps":
                 with col_right:
                     st.markdown("### Raw Materials Explosion")
                     
-                    # Aggregate ingredients maintaining subrecipe order
+                    # Aggregate ingredients for all subrecipes
                     all_ingredients = {}
-                    ingredient_order = []  # Track order of first appearance
                     
                     for idx, row in display_df.iterrows():
                         subrecipe_name = row['Subrecipe']
@@ -848,17 +835,16 @@ elif st.session_state.page == "wps":
                                 if qty_conversion > 0:
                                     total_qty = qty_conversion * total_batches
                                     
-                                    if ingredient_name not in all_ingredients:
-                                        ingredient_order.append(ingredient_name)
-                                        all_ingredients[ingredient_name] = total_qty
-                                    else:
+                                    if ingredient_name in all_ingredients:
                                         all_ingredients[ingredient_name] += total_qty
+                                    else:
+                                        all_ingredients[ingredient_name] = total_qty
                     
-                    # Display aggregated ingredients in order of appearance
+                    # Display aggregated ingredients
                     if all_ingredients:
                         ingredients_list = [
-                            {"Raw Material": name, "Total Qty (KG)": f"{all_ingredients[name]:.3f}"}
-                            for name in ingredient_order
+                            {"Raw Material": name, "Total Qty (KG)": f"{qty:.3f}"}
+                            for name, qty in sorted(all_ingredients.items())
                         ]
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
@@ -886,18 +872,6 @@ elif st.session_state.page == "wps":
                         """, unsafe_allow_html=True)
                     else:
                         st.warning("No ingredients data found for selected subrecipes")
-            else:
-                st.warning("No valid WPS data found after filtering")
-        else:
-            st.error(f"Not enough columns in WPS data. Found {len(wps_df.columns)} columns, need at least 22.")
-
-# Footer
-st.markdown("---")
-st.markdown("""
-    <div style="text-align: center; color: #6a6a6a; font-size: 0.9rem; padding: 2rem 0 1rem 0;">
-        Subrecipe Guide 2025
-    </div>
-    """, unsafe_allow_html=True)
             else:
                 st.warning("No valid WPS data found after filtering")
         else:
@@ -942,6 +916,8 @@ st.markdown("""
             # Select columns A and P-V
             display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
             
+            st.write(f"**After selecting columns - Rows:** {len(display_df)}")
+            
             # Rename columns
             column_names = ['Subrecipe'] + batch_headers
             display_df.columns = column_names
@@ -949,6 +925,8 @@ st.markdown("""
             # Remove rows where Column A is empty
             display_df = display_df[display_df.iloc[:, 0].notna()]
             display_df = display_df[display_df.iloc[:, 0] != '']
+            
+            st.write(f"**After removing empty subrecipes - Rows:** {len(display_df)}")
             
             # Normalize subrecipe names for filtering
             display_df['_normalized'] = display_df['Subrecipe'].str.strip().str.lower()
@@ -961,6 +939,8 @@ st.markdown("""
             
             for term in exclude_terms:
                 display_df = display_df[display_df['_normalized'] != term]
+            
+            st.write(f"**After removing excluded terms - Rows:** {len(display_df)}")
             
             # Remove rows where all batch columns are empty, zero, or -.0
             batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
