@@ -840,4 +840,4 @@ st.markdown("""
     <div style="text-align: center; color: #6a6a6a; font-size: 0.9rem; padding: 2rem 0 1rem 0;">
         Subrecipe Guide 2025
     </div>
-    """
+    """, unsafe_allow_html=True)
