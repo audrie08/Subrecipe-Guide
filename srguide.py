@@ -104,15 +104,22 @@ st.markdown("""
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
         color: #2d2d2d !important;
         border: none !important;
-        padding: 0.75rem 1.5rem !important;
-        border-radius: 8px !important;
+        padding: 0.6rem 1.2rem !important;
+        border-radius: 20px !important;
         font-weight: 600 !important;
+        font-size: 0.9rem !important;
         transition: all 0.3s ease !important;
+        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2) !important;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4) !important;
+        box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35) !important;
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0px);
     }
     
     /* Navigation buttons styling */
