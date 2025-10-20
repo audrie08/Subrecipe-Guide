@@ -103,10 +103,10 @@ st.markdown("""
     .stButton > button {
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
         color: #2d2d2d !important;
-        border: none !important;
+        border: #fcd34d !important;
         padding: 0.6rem 1.2rem !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
+        border-radius: 25px !important;
+        font-weight: 800 !important;
         font-size: 0.9rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2) !important;
