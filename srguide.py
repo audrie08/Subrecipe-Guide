@@ -16,7 +16,7 @@ st.markdown("""
     <style>
     /* Container styling */
     .block-container {
-        max-width: 1450px;
+        max-width: 1500px;
         padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
@@ -841,15 +841,6 @@ elif st.session_state.page == "wps":
                     if all_ingredients:
                         ingredients_list = []
                         
-                        # Debug: Show beginning inventory info
-                        st.write("🔍 **Debug: Beginning Inventory Data**")
-                        st.write(f"- Beginning inventory dataframe loaded: {not beginning_inventory_df.empty}")
-                        if not beginning_inventory_df.empty:
-                            st.write(f"- Total rows in beginning inventory: {len(beginning_inventory_df)}")
-                            st.write(f"- Total columns in beginning inventory: {len(beginning_inventory_df.columns)}")
-                            st.write(f"- Column names (first 10): {list(beginning_inventory_df.columns[:10])}")
-                            st.write(f"- Sample normalized raw materials: {beginning_inventory_df['_normalized_raw_material'].head(5).tolist() if '_normalized_raw_material' in beginning_inventory_df.columns else 'Column not found'}")
-                        
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
                             
@@ -882,7 +873,7 @@ elif st.session_state.page == "wps":
                                 "Raw Material": name,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
                                 "Beginning (KG)": f"{beginning_inv:.3f}",
-                                "Difference (KG)": f"{difference:.3f}"
+                                "Difference (KG)": f"<b>{difference:.3f}</b>"
                             })
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
