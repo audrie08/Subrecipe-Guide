@@ -841,6 +841,15 @@ elif st.session_state.page == "wps":
                     if all_ingredients:
                         ingredients_list = []
                         
+                        # Debug: Show beginning inventory info
+                        st.write("🔍 **Debug: Beginning Inventory Data**")
+                        st.write(f"- Beginning inventory dataframe loaded: {not beginning_inventory_df.empty}")
+                        if not beginning_inventory_df.empty:
+                            st.write(f"- Total rows in beginning inventory: {len(beginning_inventory_df)}")
+                            st.write(f"- Total columns in beginning inventory: {len(beginning_inventory_df.columns)}")
+                            st.write(f"- Column names (first 10): {list(beginning_inventory_df.columns[:10])}")
+                            st.write(f"- Sample normalized raw materials: {beginning_inventory_df['_normalized_raw_material'].head(5).tolist() if '_normalized_raw_material' in beginning_inventory_df.columns else 'Column not found'}")
+                        
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
                             
@@ -893,13 +902,13 @@ elif st.session_state.page == "wps":
                         st.markdown(table_html, unsafe_allow_html=True)
                         
                         total_materials = sum(all_ingredients.values())
-                        total_beginning = sum([float(item["Beginning Inventory (KG)"]) for item in ingredients_list])
+                        total_beginning = sum([float(item["Beginning (KG)"]) for item in ingredients_list])
                         total_difference = total_materials - total_beginning
                         
                         st.markdown(f"""
                             <div class="total-weight-box">
                                 <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG<br>
-                                <span class="weight-label">Total Beginning Inventory:</span> {total_beginning:.3f} KG<br>
+                                <span class="weight-label">Total Beginning:</span> {total_beginning:.3f} KG<br>
                                 <span class="weight-label">Total Difference:</span> {total_difference:.3f} KG
                             </div>
                         """, unsafe_allow_html=True)
