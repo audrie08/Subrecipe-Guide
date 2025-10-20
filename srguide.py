@@ -16,7 +16,7 @@ st.markdown("""
     <style>
     /* Container styling */
     .block-container {
-        max-width: 1400px;
+        max-width: 1200px;
         padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
@@ -172,22 +172,12 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
     
-    .wps-table th {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.85rem;
-    }
-    
     .ingredients-table td, .wps-table td {
         padding: 1rem;
         color: #4a4a4a;
         border-top: 1px solid #e8e8e8;
         vertical-align: middle;
         text-align: left;
-    }
-    
-    .wps-table td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.85rem;
     }
     
     .ingredients-table tbody tr, .wps-table tbody tr {
@@ -243,11 +233,11 @@ st.markdown("""
 col_nav1, col_nav2 = st.columns([1, 1])
 
 with col_nav1:
-    if st.button("Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
+    if st.button("📋 Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("WPS", use_container_width=True, key="nav_wps"):
+    if st.button("📊 WPS", use_container_width=True, key="nav_wps"):
         st.session_state.page = "wps"
 
 # Initialize page state
@@ -563,6 +553,9 @@ if st.session_state.page == "subrecipe":
                 expected_packs = int(total_expected_output / pack_size)
             
             # Display results
+            st.markdown("---")
+            st.subheader("Batch Analytics")
+            
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -578,6 +571,9 @@ if st.session_state.page == "subrecipe":
                 st.metric("Storage Condition", storage_condition)
             
             # Display Ingredients Table
+            st.markdown("---")
+            st.subheader("Ingredients Breakdown")
+            
             if not ingredients_df.empty:
                 # Filter ingredients for selected recipe (case-insensitive)
                 recipe_ingredients = ingredients_df[ingredients_df['_normalized_subrecipe'] == selected_normalized].copy()
@@ -729,10 +725,10 @@ elif st.session_state.page == "wps":
             
             if not display_df.empty:
                 # Create two columns layout with adjusted widths
-                col_left, col_right = st.columns([3, 2])
+                col_left, col_right = st.columns([2, 3])
                 
                 with col_left:
-                    st.markdown("### SKU Weekly Batches")
+                    st.markdown("### Weekly Batches")
                     # Display batch table (without Total_Batches column)
                     batch_display = display_df.drop(columns=['Total_Batches'])
                     
@@ -753,7 +749,7 @@ elif st.session_state.page == "wps":
                     st.info(f"Total subrecipes: {len(display_df)}")
                 
                 with col_right:
-                    st.markdown("### Raw Materials")
+                    st.markdown("### Raw Materials Explosion")
                     
                     # Aggregate ingredients maintaining subrecipe order
                     all_ingredients = {}
@@ -782,4 +778,60 @@ elif st.session_state.page == "wps":
                                 
                                 if len(ing_row) > 3 and pd.notna(ing_row.iloc[3]):
                                     try:
-                                        qty_conversion = float(ing_row.iloc[3
+                                        qty_conversion = float(ing_row.iloc[3])
+                                    except (ValueError, TypeError):
+                                        qty_conversion = 0
+                                
+                                if qty_conversion > 0:
+                                    total_qty = qty_conversion * total_batches
+                                    
+                                    if ingredient_name not in all_ingredients:
+                                        ingredient_order.append(ingredient_name)
+                                        all_ingredients[ingredient_name] = total_qty
+                                    else:
+                                        all_ingredients[ingredient_name] += total_qty
+                    
+                    # Display aggregated ingredients in order of appearance
+                    if all_ingredients:
+                        ingredients_list = [
+                            {"Raw Material": name, "Total Qty (KG)": f"{all_ingredients[name]:.3f}"}
+                            for name in ingredient_order
+                        ]
+                        
+                        ingredients_display_df = pd.DataFrame(ingredients_list)
+                        
+                        html_table = ingredients_display_df.to_html(
+                            escape=False,
+                            index=False,
+                            classes='wps-table',
+                            table_id='ingredients-explosion'
+                        )
+                        
+                        table_html = f"""
+                        <div class="wps-table-container">
+                            {html_table}
+                        </div>
+                        """
+                        
+                        st.markdown(table_html, unsafe_allow_html=True)
+                        
+                        total_materials = sum(all_ingredients.values())
+                        st.markdown(f"""
+                            <div class="total-weight-box">
+                                <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
+                            </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.warning("No ingredients data found for selected subrecipes")
+            else:
+                st.warning("No valid WPS data found after filtering")
+        else:
+            st.error(f"Not enough columns in WPS data. Found {len(wps_df.columns)} columns, need at least 22.")
+
+# Footer
+st.markdown("---")
+st.markdown("""
+    <div style="text-align: center; color: #6a6a6a; font-size: 0.9rem; padding: 2rem 0 1rem 0;">
+        Subrecipe Guide 2025
+    </div>
+    """, unsafe_allow_html=True)
