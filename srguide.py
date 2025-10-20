@@ -226,11 +226,11 @@ st.markdown("""
 col_nav1, col_nav2 = st.columns([1, 1])
 
 with col_nav1:
-    if st.button("📋 Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
+    if st.button("Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("📊 WPS", use_container_width=True, key="nav_wps"):
+    if st.button("WPS", use_container_width=True, key="nav_wps"):
         st.session_state.page = "wps"
 
 # Initialize page state
@@ -546,8 +546,6 @@ if st.session_state.page == "subrecipe":
                 expected_packs = int(total_expected_output / pack_size)
             
             # Display results
-            st.markdown("---")
-            st.subheader("Batch Analytics")
             
             col1, col2, col3 = st.columns(3)
             
@@ -564,8 +562,6 @@ if st.session_state.page == "subrecipe":
                 st.metric("Storage Condition", storage_condition)
             
             # Display Ingredients Table
-            st.markdown("---")
-            st.subheader("Ingredients Breakdown")
             
             if not ingredients_df.empty:
                 # Filter ingredients for selected recipe (case-insensitive)
@@ -653,7 +649,7 @@ elif st.session_state.page == "wps":
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
     else:
-        st.subheader("Work Planning System")
+        st.subheader("")
         
         if len(wps_df.columns) > 21:
             # Get the actual headers
@@ -723,7 +719,7 @@ elif st.session_state.page == "wps":
                 col_left, col_right = st.columns([3, 2])
                 
                 with col_left:
-                    st.markdown("### Weekly Batches")
+                    st.markdown("### SKU Weekly Batches")
                     # Display batch table (without Total_Batches column)
                     batch_display = display_df.drop(columns=['Total_Batches'])
                     
@@ -744,7 +740,7 @@ elif st.session_state.page == "wps":
                     st.info(f"Total subrecipes: {len(display_df)}")
                 
                 with col_right:
-                    st.markdown("### Raw Materials Explosion")
+                    st.markdown("### Raw Materials")
                     
                     # Aggregate ingredients maintaining subrecipe order
                     all_ingredients = {}
