@@ -865,10 +865,11 @@ elif st.session_state.page == "wps":
                                 ]
                                 
                                 if not inv_row.empty:
-                                    # Get value from column DQ (index 119 for Oct 20 Monday)
-                                    if len(inv_row.iloc[0]) > 119:
+                                    # Get value from column DQ (index 120 for Oct 20 Monday)
+                                    # DQ is column 121 in Excel (1-based), so index 120 (0-based)
+                                    if len(inv_row.iloc[0]) > 120:
                                         try:
-                                            inv_value = inv_row.iloc[0].iloc[119]
+                                            inv_value = inv_row.iloc[0].iloc[120]
                                             if pd.notna(inv_value) and inv_value != '':
                                                 beginning_inv = float(inv_value)
                                         except (ValueError, TypeError, IndexError):
