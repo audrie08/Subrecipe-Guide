@@ -16,7 +16,7 @@ st.markdown("""
     <style>
     /* Container styling */
     .block-container {
-        max-width: 1550px;
+        max-width: 1650px;
         padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
