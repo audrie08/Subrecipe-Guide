@@ -103,10 +103,10 @@ st.markdown("""
     .stButton > button {
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
         color: #2d2d2d !important;
-        border: #fcd34d !important;
+        border: none !important;
         padding: 0.6rem 1.2rem !important;
-        border-radius: 25px !important;
-        font-weight: 800 !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
         font-size: 0.9rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2) !important;
@@ -172,12 +172,22 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
     
+    .wps-table th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+    
     .ingredients-table td, .wps-table td {
         padding: 1rem;
         color: #4a4a4a;
         border-top: 1px solid #e8e8e8;
         vertical-align: middle;
         text-align: left;
+    }
+    
+    .wps-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
     }
     
     .ingredients-table tbody tr, .wps-table tbody tr {
@@ -443,11 +453,53 @@ def load_wps_data():
         st.error(f"Error loading WPS data: {str(e)}")
         return pd.DataFrame()
 
+# --- LOAD BEGINNING INVENTORY DATA ---
+@st.cache_data(ttl=60)
+def load_beginning_inventory_data():
+    """Load beginning inventory data from sheet index 6 (7th sheet)"""
+    credentials = load_credentials()
+    if not credentials:
+        return pd.DataFrame()
+
+    try:
+        gc = gspread.authorize(credentials)
+        spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+        sh = gc.open_by_key(spreadsheet_id)
+
+        # Get sheet index 6 (7th sheet)
+        worksheet = sh.get_worksheet(6)
+        data = worksheet.get_all_values()
+        
+        if len(data) < 3:
+            st.warning("Not enough data in sheet index 6 for beginning inventory")
+            return pd.DataFrame()
+
+        # Header is at row 2 (index 1), data starts at row 3 (index 2)
+        headers = data[1]
+        data_rows = data[2:182]  # Rows 3 to 182 (indices 2 to 181)
+        
+        # Create DataFrame
+        df = pd.DataFrame(data_rows, columns=headers)
+        
+        # Clean the data
+        df = df.replace('', pd.NA)
+        
+        # Add normalized column for raw material names (Column B, index 1)
+        if len(df.columns) > 1:
+            df['_normalized_raw_material'] = df.iloc[:, 1].str.strip().str.lower()
+        
+        return df
+
+    except Exception as e:
+        st.error(f"Error loading beginning inventory data: {str(e)}")
+        return pd.DataFrame()
+
 # Load data
 subrecipe_df = load_subrecipe_data()
 batch_df = load_batch_data()
 ingredients_df = load_ingredients_data()
 wps_df = load_wps_data()
+beginning_inventory_df = load_beginning_inventory_data()
 
 # Page routing
 if st.session_state.page == "subrecipe":
@@ -553,7 +605,6 @@ if st.session_state.page == "subrecipe":
                 expected_packs = int(total_expected_output / pack_size)
             
             # Display results
-            
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -569,7 +620,6 @@ if st.session_state.page == "subrecipe":
                 st.metric("Storage Condition", storage_condition)
             
             # Display Ingredients Table
-            
             if not ingredients_df.empty:
                 # Filter ingredients for selected recipe (case-insensitive)
                 recipe_ingredients = ingredients_df[ingredients_df['_normalized_subrecipe'] == selected_normalized].copy()
@@ -721,7 +771,7 @@ elif st.session_state.page == "wps":
             
             if not display_df.empty:
                 # Create two columns layout with adjusted widths
-                col_left, col_right = st.columns([3, 2])
+                col_left, col_right = st.columns([2, 3])
                 
                 with col_left:
                     st.markdown("### SKU Weekly Batches")
@@ -787,12 +837,43 @@ elif st.session_state.page == "wps":
                                     else:
                                         all_ingredients[ingredient_name] += total_qty
                     
-                    # Display aggregated ingredients in order of appearance
+                    # Display aggregated ingredients in order of appearance with Beginning Inventory
                     if all_ingredients:
-                        ingredients_list = [
-                            {"Raw Material": name, "Total Qty (KG)": f"{all_ingredients[name]:.3f}"}
-                            for name in ingredient_order
-                        ]
+                        ingredients_list = []
+                        
+                        for name in ingredient_order:
+                            total_qty = all_ingredients[name]
+                            
+                            # Find beginning inventory for this ingredient
+                            beginning_inv = 0
+                            if not beginning_inventory_df.empty:
+                                # Normalize the ingredient name for matching
+                                name_normalized = name.strip().lower()
+                                
+                                # Find matching row in beginning inventory
+                                inv_row = beginning_inventory_df[
+                                    beginning_inventory_df['_normalized_raw_material'] == name_normalized
+                                ]
+                                
+                                if not inv_row.empty:
+                                    # Get value from column DQ (index 119 for Oct 20 Monday)
+                                    if len(inv_row.iloc[0]) > 119:
+                                        try:
+                                            inv_value = inv_row.iloc[0].iloc[119]
+                                            if pd.notna(inv_value) and inv_value != '':
+                                                beginning_inv = float(inv_value)
+                                        except (ValueError, TypeError, IndexError):
+                                            beginning_inv = 0
+                            
+                            # Calculate difference
+                            difference = total_qty - beginning_inv
+                            
+                            ingredients_list.append({
+                                "Raw Material": name,
+                                "Total Qty (KG)": f"{total_qty:.3f}",
+                                "Beginning Inventory (KG)": f"{beginning_inv:.3f}",
+                                "Difference (KG)": f"{difference:.3f}"
+                            })
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
                         
@@ -812,9 +893,14 @@ elif st.session_state.page == "wps":
                         st.markdown(table_html, unsafe_allow_html=True)
                         
                         total_materials = sum(all_ingredients.values())
+                        total_beginning = sum([float(item["Beginning Inventory (KG)"]) for item in ingredients_list])
+                        total_difference = total_materials - total_beginning
+                        
                         st.markdown(f"""
                             <div class="total-weight-box">
-                                <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
+                                <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG<br>
+                                <span class="weight-label">Total Beginning Inventory:</span> {total_beginning:.3f} KG<br>
+                                <span class="weight-label">Total Difference:</span> {total_difference:.3f} KG
                             </div>
                         """, unsafe_allow_html=True)
                     else:
