@@ -871,7 +871,7 @@ elif st.session_state.page == "wps":
                             ingredients_list.append({
                                 "Raw Material": name,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
-                                "Beginning Inventory (KG)": f"{beginning_inv:.3f}",
+                                "Beginning (KG)": f"{beginning_inv:.3f}",
                                 "Difference (KG)": f"{difference:.3f}"
                             })
                         
