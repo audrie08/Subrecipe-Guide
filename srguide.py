@@ -99,28 +99,30 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1) !important;
     }
     
-    /* Button styling */
+    /* Custom button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
-        color: #2d2d2d !important;
+        background-color: #6b7280 !important;
+        color: white !important;
         border: none !important;
-        padding: 0.6rem 1.2rem !important;
         border-radius: 20px !important;
-        font-weight: 600 !important;
-        font-size: 0.9rem !important;
+        padding: 0.65rem 1rem !important;
+        font-weight: 500 !important;
+        width: 100% !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2) !important;
+        font-family: 'TT Norms', 'Segoe UI', sans-serif !important;
+    }
+    .stButton {
+        margin-top: 0.5rem !important;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35) !important;
-        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+        background-color: #5a6268 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
     }
     
-    .stButton > button:active {
-        transform: translateY(0px);
-    }
+    .stButton > button:focus {
+        box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.25) !important;
     
     /* Navigation buttons styling */
     .nav-button {
