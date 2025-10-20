@@ -655,17 +655,6 @@ elif st.session_state.page == "wps":
     else:
         st.subheader("Work Planning System")
         
-        # Debug: Show data info
-        with st.expander("🔍 Debug Information"):
-            st.write(f"**Total rows loaded:** {len(wps_df)}")
-            st.write(f"**Total columns loaded:** {len(wps_df.columns)}")
-            st.write(f"**Column names:** {list(wps_df.columns[:25])}")
-            st.write(f"**First 5 rows of Column A:**")
-            st.write(wps_df.iloc[:5, 0].tolist())
-            st.write(f"**Sample batch columns (P-V, indices 15-21):**")
-            if len(wps_df.columns) > 21:
-                st.write(wps_df.iloc[:5, 15:22])
-        
         if len(wps_df.columns) > 21:
             # Get the actual headers
             credentials = load_credentials()
@@ -730,8 +719,8 @@ elif st.session_state.page == "wps":
             display_df = display_df.drop(columns=['_normalized'])
             
             if not display_df.empty:
-                # Create two columns layout
-                col_left, col_right = st.columns([3, 2])
+                # Create two columns layout with adjusted widths
+                col_left, col_right = st.columns([2, 3])
                 
                 with col_left:
                     st.markdown("### Weekly Batches")
