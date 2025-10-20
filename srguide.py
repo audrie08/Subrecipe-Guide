@@ -146,11 +146,11 @@ st.markdown("""
 col_nav1, col_nav2 = st.columns([1, 1])
 
 with col_nav1:
-    if st.button("Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
+    if st.button("📋 Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("WPS", use_container_width=True, key="nav_wps"):
+    if st.button("📊 WPS", use_container_width=True, key="nav_wps"):
         st.session_state.page = "wps"
 
 # Initialize page state
@@ -466,6 +466,8 @@ if st.session_state.page == "subrecipe":
                 expected_packs = int(total_expected_output / pack_size)
             
             # Display results
+            st.markdown("---")
+            st.subheader("Batch Analytics")
             
             col1, col2, col3 = st.columns(3)
             
@@ -482,6 +484,8 @@ if st.session_state.page == "subrecipe":
                 st.metric("Storage Condition", storage_condition)
             
             # Display Ingredients Table
+            st.markdown("---")
+            st.subheader("Ingredients Breakdown")
             
             if not ingredients_df.empty:
                 # Filter ingredients for selected recipe (case-insensitive)
@@ -581,7 +585,7 @@ if st.session_state.page == "subrecipe":
                         .total-weight-box {
                             background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
                             color: white;
-                            padding: 0.5rem 1.5rem;
+                            padding: 1.2rem 1.5rem;
                             border-radius: 8px;
                             display: inline-block;
                             margin-top: 1rem;
@@ -639,7 +643,255 @@ elif st.session_state.page == "wps":
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
     else:
-        st.subheader("")
+        st.subheader("Work Planning System")
+        
+        # Debug: Show data info
+        with st.expander("🔍 Debug Information"):
+            st.write(f"**Total rows loaded:** {len(wps_df)}")
+            st.write(f"**Total columns loaded:** {len(wps_df.columns)}")
+            st.write(f"**Column names:** {list(wps_df.columns[:25])}")
+            st.write(f"**First 5 rows of Column A:**")
+            st.write(wps_df.iloc[:5, 0].tolist())
+            st.write(f"**Sample batch columns (P-V, indices 15-21):**")
+            if len(wps_df.columns) > 21:
+                st.write(wps_df.iloc[:5, 15:22])
+        
+        if len(wps_df.columns) > 21:
+            # Get the actual headers
+            credentials = load_credentials()
+            if credentials:
+                try:
+                    gc = gspread.authorize(credentials)
+                    spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+                    sh = gc.open_by_key(spreadsheet_id)
+                    worksheet = sh.get_worksheet(5)
+                    header_row = worksheet.get_all_values()[9]
+                    batch_headers = [header_row[i] if i < len(header_row) else f'Batch {i-14}' for i in range(15, 22)]
+                except:
+                    batch_headers = [f'Batch {i}' for i in range(1, 8)]
+            else:
+                batch_headers = [f'Batch {i}' for i in range(1, 8)]
+            
+            # Select columns A and P-V
+            display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
+            column_names = ['Subrecipe'] + batch_headers
+            display_df.columns = column_names
+            
+            # Remove empty rows
+            display_df = display_df[display_df.iloc[:, 0].notna()]
+            display_df = display_df[display_df.iloc[:, 0] != '']
+            
+            # Normalize and filter
+            display_df['_normalized'] = display_df['Subrecipe'].str.strip().str.lower()
+            
+            exclude_terms = [
+                'hot kitchen', 'hot kitchen sauce', 'hot kitchen savory', 
+                'cold sauce', 'fabrication poultry', 'fabrication meats', 'pastry'
+            ]
+            
+            for term in exclude_terms:
+                display_df = display_df[display_df['_normalized'] != term]
+            
+            # Filter invalid batches
+            batch_cols = display_df.columns[1:-1]
+            
+            def has_valid_batch(row):
+                for col in batch_cols:
+                    val = str(row[col]).strip()
+                    if val and val != '':
+                        invalid_values = ['0', '0.0', '.0', '0.00', '.00', '-.0', '-0', '-0.0', '- .0']
+                        if val in invalid_values:
+                            continue
+                        try:
+                            num_val = float(val.replace(' ', ''))
+                            if num_val > 0:
+                                return True
+                        except (ValueError, TypeError):
+                            return True
+                return False
+            
+            display_df = display_df[display_df.apply(has_valid_batch, axis=1)]
+            
+            # Calculate total batches per subrecipe
+            display_df['Total_Batches'] = 0
+            for col in batch_cols:
+                display_df['Total_Batches'] += pd.to_numeric(display_df[col], errors='coerce').fillna(0)
+            
+            display_df = display_df.drop(columns=['_normalized'])
+            
+            if not display_df.empty:
+                # Create two columns layout
+                col_left, col_right = st.columns([3, 2])
+                
+                with col_left:
+                    st.markdown("### Weekly Batches")
+                    # Display batch table (without Total_Batches column)
+                    batch_display = display_df.drop(columns=['Total_Batches'])
+                    
+                    st.markdown("""
+                    <style>
+                    .wps-table-container {
+                        border-radius: 12px;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                        margin: 20px 0;
+                        overflow: hidden;
+                    }
+                    .wps-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 14px;
+                        background: white;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                        margin: 0;
+                    }
+                    .wps-table thead {
+                        background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+                    }
+                    .wps-table th {
+                        color: #ffffff;
+                        font-weight: 600;
+                        padding: 1rem;
+                        text-align: left;
+                        border: none;
+                        font-size: 0.9rem;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .wps-table td {
+                        padding: 1rem;
+                        color: #4a4a4a;
+                        border-top: 1px solid #e8e8e8;
+                        vertical-align: middle;
+                        text-align: left;
+                    }
+                    .wps-table tbody tr {
+                        background: white;
+                        transition: background 0.2s ease;
+                    }
+                    .wps-table tbody tr:nth-child(even) {
+                        background: #fafafa;
+                    }
+                    .wps-table tbody tr:hover {
+                        background: #fff9e6;
+                    }
+                    .wps-table tr:last-child td {
+                        border-bottom: none;
+                    }
+                    .wps-table td:first-child {
+                        font-weight: 700;
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    
+                    html_table = batch_display.to_html(
+                        escape=False,
+                        index=False,
+                        classes='wps-table',
+                        table_id='wps-table'
+                    )
+                    
+                    table_html = f"""
+                    <div class="wps-table-container">
+                        {html_table}
+                    </div>
+                    """
+                    
+                    st.markdown(table_html, unsafe_allow_html=True)
+                    st.info(f"Total subrecipes: {len(display_df)}")
+                
+                with col_right:
+                    st.markdown("### Raw Materials Explosion")
+                    
+                    # Aggregate ingredients for all subrecipes
+                    all_ingredients = {}
+                    
+                    for idx, row in display_df.iterrows():
+                        subrecipe_name = row['Subrecipe']
+                        total_batches = row['Total_Batches']
+                        
+                        # Find ingredients for this subrecipe
+                        subrecipe_normalized = subrecipe_name.strip().lower()
+                        recipe_ingredients = ingredients_df[
+                            ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
+                        ].copy()
+                        
+                        if not recipe_ingredients.empty:
+                            # Remove duplicates
+                            recipe_ingredients = recipe_ingredients.drop_duplicates(
+                                subset=['_normalized_subrecipe', '_normalized_ingredient'],
+                                keep='first'
+                            )
+                            
+                            for _, ing_row in recipe_ingredients.iterrows():
+                                ingredient_name = ing_row.iloc[1] if pd.notna(ing_row.iloc[1]) else "N/A"
+                                qty_conversion = 0
+                                
+                                if len(ing_row) > 3 and pd.notna(ing_row.iloc[3]):
+                                    try:
+                                        qty_conversion = float(ing_row.iloc[3])
+                                    except (ValueError, TypeError):
+                                        qty_conversion = 0
+                                
+                                if qty_conversion > 0:
+                                    total_qty = qty_conversion * total_batches
+                                    
+                                    if ingredient_name in all_ingredients:
+                                        all_ingredients[ingredient_name] += total_qty
+                                    else:
+                                        all_ingredients[ingredient_name] = total_qty
+                    
+                    # Display aggregated ingredients
+                    if all_ingredients:
+                        ingredients_list = [
+                            {"Raw Material": name, "Total Qty (KG)": f"{qty:.3f}"}
+                            for name, qty in sorted(all_ingredients.items())
+                        ]
+                        
+                        ingredients_display_df = pd.DataFrame(ingredients_list)
+                        
+                        html_table = ingredients_display_df.to_html(
+                            escape=False,
+                            index=False,
+                            classes='wps-table',
+                            table_id='ingredients-explosion'
+                        )
+                        
+                        table_html = f"""
+                        <div class="wps-table-container">
+                            {html_table}
+                        </div>
+                        """
+                        
+                        st.markdown(table_html, unsafe_allow_html=True)
+                        
+                        total_materials = sum(all_ingredients.values())
+                        st.markdown(f"""
+                            <div class="total-weight-box">
+                                <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
+                            </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.warning("No ingredients data found for selected subrecipes")
+            else:
+                st.warning("No valid WPS data found after filtering")
+        else:
+            st.error(f"Not enough columns in WPS data. Found {len(wps_df.columns)} columns, need at least 22.")
+    # WPS PAGE
+    if wps_df.empty:
+        st.error("Unable to load WPS data. Please check your Google Sheets connection.")
+    else:
+        st.subheader("Work Planning System")
+        
+        # Debug: Show data info
+        with st.expander("🔍 Debug Information"):
+            st.write(f"**Total rows loaded:** {len(wps_df)}")
+            st.write(f"**Total columns loaded:** {len(wps_df.columns)}")
+            st.write(f"**Column names:** {list(wps_df.columns[:25])}")  # Show first 25 columns
+            st.write(f"**First 5 rows of Column A:**")
+            st.write(wps_df.iloc[:5, 0].tolist())
+            st.write(f"**Sample batch columns (P-V, indices 15-21):**")
+            if len(wps_df.columns) > 21:
+                st.write(wps_df.iloc[:5, 15:22])
         
         # Get Column A (Subrecipe) and Columns P-V (Batches)
         # Column A is index 0, Columns P-V are indices 15-21
@@ -663,7 +915,9 @@ elif st.session_state.page == "wps":
             
             # Select columns A and P-V
             display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
-                        
+            
+            st.write(f"**After selecting columns - Rows:** {len(display_df)}")
+            
             # Rename columns
             column_names = ['Subrecipe'] + batch_headers
             display_df.columns = column_names
@@ -671,7 +925,9 @@ elif st.session_state.page == "wps":
             # Remove rows where Column A is empty
             display_df = display_df[display_df.iloc[:, 0].notna()]
             display_df = display_df[display_df.iloc[:, 0] != '']
-                        
+            
+            st.write(f"**After removing empty subrecipes - Rows:** {len(display_df)}")
+            
             # Normalize subrecipe names for filtering
             display_df['_normalized'] = display_df['Subrecipe'].str.strip().str.lower()
             
@@ -683,7 +939,9 @@ elif st.session_state.page == "wps":
             
             for term in exclude_terms:
                 display_df = display_df[display_df['_normalized'] != term]
-                        
+            
+            st.write(f"**After removing excluded terms - Rows:** {len(display_df)}")
+            
             # Remove rows where all batch columns are empty, zero, or -.0
             batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
             
@@ -709,7 +967,9 @@ elif st.session_state.page == "wps":
                 return False
             
             display_df = display_df[display_df.apply(has_valid_batch, axis=1)]
-                        
+            
+            st.write(f"**After filtering invalid batches - Rows:** {len(display_df)}")
+            
             # Drop the normalized column for display
             display_df = display_df.drop(columns=['_normalized'])
             
