@@ -890,6 +890,18 @@ elif st.session_state.page == "wps":
                 st.warning("No valid WPS data found after filtering")
         else:
             st.error(f"Not enough columns in WPS data. Found {len(wps_df.columns)} columns, need at least 22.")
+
+# Footer
+st.markdown("---")
+st.markdown("""
+    <div style="text-align: center; color: #6a6a6a; font-size: 0.9rem; padding: 2rem 0 1rem 0;">
+        Subrecipe Guide 2025
+    </div>
+    """, unsafe_allow_html=True)
+            else:
+                st.warning("No valid WPS data found after filtering")
+        else:
+            st.error(f"Not enough columns in WPS data. Found {len(wps_df.columns)} columns, need at least 22.")
     # WPS PAGE
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
@@ -930,8 +942,6 @@ elif st.session_state.page == "wps":
             # Select columns A and P-V
             display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
             
-            st.write(f"**After selecting columns - Rows:** {len(display_df)}")
-            
             # Rename columns
             column_names = ['Subrecipe'] + batch_headers
             display_df.columns = column_names
@@ -939,8 +949,6 @@ elif st.session_state.page == "wps":
             # Remove rows where Column A is empty
             display_df = display_df[display_df.iloc[:, 0].notna()]
             display_df = display_df[display_df.iloc[:, 0] != '']
-            
-            st.write(f"**After removing empty subrecipes - Rows:** {len(display_df)}")
             
             # Normalize subrecipe names for filtering
             display_df['_normalized'] = display_df['Subrecipe'].str.strip().str.lower()
@@ -953,8 +961,6 @@ elif st.session_state.page == "wps":
             
             for term in exclude_terms:
                 display_df = display_df[display_df['_normalized'] != term]
-            
-            st.write(f"**After removing excluded terms - Rows:** {len(display_df)}")
             
             # Remove rows where all batch columns are empty, zero, or -.0
             batch_cols = display_df.columns[1:-1]  # Exclude Subrecipe and _normalized
