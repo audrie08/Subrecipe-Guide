@@ -16,7 +16,7 @@ st.markdown("""
     <style>
     /* Container styling */
     .block-container {
-        max-width: 1200px;
+        max-width: 1400px;
         padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
@@ -725,7 +725,7 @@ elif st.session_state.page == "wps":
             
             if not display_df.empty:
                 # Create two columns layout with adjusted widths
-                col_left, col_right = st.columns([2, 3])
+                col_left, col_right = st.columns([3, 2])
                 
                 with col_left:
                     st.markdown("### Weekly Batches")
