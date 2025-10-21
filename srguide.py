@@ -18,7 +18,6 @@ st.markdown("""
     .block-container {
         max-width: 1450px;
         padding-left: 5rem;
-        padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
         padding-bottom: 1rem;
@@ -28,15 +27,15 @@ st.markdown("""
     .main-header {
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
         padding: 2rem 2.5rem;
-        border-radius: 25px;
-        border-bottom: 5px solid #f59e0b;
+        border-radius: 16px;
+        border-bottom: 3px solid #f59e0b;
         margin-bottom: 2rem;
     }
     
     .main-header h1 {
         color: #2d2d2d;
-        font-size: 3rem;
-        font-weight: 800;
+        font-size: 2rem;
+        font-weight: 700;
         margin: 0;
     }
     
@@ -63,7 +62,7 @@ st.markdown("""
         top: 0;
         left: 0;
         width: 100%;
-        height: 3px;
+        height: 4px;
         background: linear-gradient(90deg, #1f2937 0%, #374151 100%);
     }
     
@@ -111,6 +110,8 @@ st.markdown("""
         font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2) !important;
+        min-width: 200px !important;
+        max-width: 250px !important;
     }
     
     .stButton > button:hover {
@@ -279,6 +280,7 @@ st.markdown("""
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 
 # Header
