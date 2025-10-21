@@ -16,7 +16,7 @@ st.markdown("""
     <style>
     /* Container styling */
     .block-container {
-        max-width: 1500px;
+        max-width: 1400px;
         padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
@@ -26,22 +26,22 @@ st.markdown("""
     /* Header styling */
     .main-header {
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
-        padding: 2rem 2rem;
-        border-radius: 25px;
-        border-bottom: 5px solid #f59e0b;
+        padding: 2rem 2.5rem;
+        border-radius: 16px;
+        border-bottom: 3px solid #f59e0b;
         margin-bottom: 2rem;
     }
     
     .main-header h1 {
         color: #2d2d2d;
-        font-size: 3rem;
-        font-weight: 800;
+        font-size: 2rem;
+        font-weight: 700;
         margin: 0;
     }
     
     .main-header p {
         color: #5a5a5a;
-        font-size: 1rem;
+        font-size: 0.95rem;
         margin: 0;
     }
     
@@ -101,25 +101,36 @@ st.markdown("""
     
     /* Button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
-        color: #2d2d2d !important;
+        background: #6b7280 !important;
+        color: white !important;
         border: none !important;
-        padding: 0.6rem 1.2rem !important;
+        padding: 0.75rem 2rem !important;
         border-radius: 25px !important;
         font-weight: 600 !important;
-        font-size: 0.9rem !important;
+        font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2) !important;
+        box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2) !important;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35) !important;
-        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+        box-shadow: 0 4px 16px rgba(107, 114, 128, 0.35) !important;
+        background: #4b5563 !important;
     }
     
     .stButton > button:active {
         transform: translateY(0px);
+    }
+    
+    /* Navigation container styling */
+    .nav-container {
+        background: #f3f4f6;
+        padding: 1.5rem 3rem;
+        border-radius: 30px;
+        margin: 0 auto 2rem auto;
+        max-width: 600px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
     }
     
     /* Navigation buttons styling */
