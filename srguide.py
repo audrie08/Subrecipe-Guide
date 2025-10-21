@@ -99,14 +99,16 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1) !important;
     }
     
-    /* Button styling */
-    .stButton > button {
+    css/* Button styling - MORE SPECIFIC */
+    div.stButton > button,
+    button[kind="primary"],
+    button[kind="secondary"] {
         background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
         color: #2d2d2d !important;
         border: none !important;
         padding: 0.75rem 2rem !important;
         border-radius: 25px !important;
-        font-weight: bold !important;
+        font-weight: 900 !important;
         font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
