@@ -124,13 +124,49 @@ st.markdown("""
     
     /* Navigation container styling */
     .nav-container {
-        background: #f3f4f6;
-        padding: 1.5rem 3rem;
+        background: #e5e7eb;
+        padding: 0.5rem;
         border-radius: 30px;
         margin: 0 auto 2rem auto;
-        max-width: 600px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e5e7eb;
+        max-width: 500px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid #d1d5db;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    /* Navigation buttons - override Streamlit default */
+    .nav-container .stButton {
+        flex: 1;
+        margin: 0 !important;
+    }
+    
+    .nav-container .stButton > button {
+        background: transparent !important;
+        color: #6b7280 !important;
+        border: none !important;
+        padding: 0.6rem 1.5rem !important;
+        border-radius: 25px !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: none !important;
+        width: 100%;
+        white-space: nowrap;
+    }
+    
+    .nav-container .stButton > button:hover {
+        background: #6b7280 !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3) !important;
+    }
+    
+    /* Active state for selected button */
+    .nav-container .stButton > button:active,
+    .nav-container .stButton > button:focus {
+        background: #4b5563 !important;
+        color: white !important;
     }
     
     /* Navigation buttons styling */
@@ -242,6 +278,7 @@ st.markdown("""
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 # Header
 st.markdown("""
