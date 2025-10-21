@@ -106,12 +106,10 @@ st.markdown("""
         border: none !important;
         padding: 0.75rem 2rem !important;
         border-radius: 25px !important;
-        font-weight: 700 !important;
+        font-weight: 900 !important;
         font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
-        min-width: 200px !important;
-        max-width: 250px !important;
         text-transform: uppercase !important;
         letter-spacing: 0.5px !important;
     }
