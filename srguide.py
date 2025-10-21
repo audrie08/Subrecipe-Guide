@@ -106,16 +106,20 @@ st.markdown("""
         border: none !important;
         padding: 0.75rem 2rem !important;
         border-radius: 25px !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2) !important;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
+        min-width: 200px !important;
+        max-width: 250px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(107, 114, 128, 0.35) !important;
-        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5) !important;
+        background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
     }
     
     .stButton > button:active {
