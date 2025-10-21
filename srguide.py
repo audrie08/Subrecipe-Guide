@@ -90,7 +90,7 @@ st.markdown("""
     /* Input styling */
     .stSelectbox > div > div, .stNumberInput > div > div > input {
         border: 2px solid #e0e0e0 !important;
-        border-radius: 8px !important;
+        border-radius: 15px !important;
         transition: all 0.3s ease !important;
     }
     
@@ -110,8 +110,6 @@ st.markdown("""
         font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2) !important;
-        min-width: 200px !important;
-        max-width: 250px !important;
     }
     
     .stButton > button:hover {
