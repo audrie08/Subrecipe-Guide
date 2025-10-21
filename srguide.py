@@ -123,66 +123,7 @@ st.markdown("""
     .stButton > button:active {
         transform: translateY(0px);
     }
-    
-    /* Navigation buttons container styling */
-    .nav-buttons-container {
-        background: #e5e7eb;
-        padding: 0.5rem;
-        border-radius: 30px;
-        margin: 0 auto 2rem auto;
-        max-width: 500px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        border: 1px solid #d1d5db;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    /* Navigation buttons - override Streamlit default */
-    .nav-buttons-container .stButton {
-        flex: 1;
-        margin: 0 !important;
-    }
-    
-    .nav-buttons-container .stButton > button {
-        background: transparent !important;
-        color: #6b7280 !important;
-        border: none !important;
-        padding: 0.6rem 1.5rem !important;
-        border-radius: 25px !important;
-        font-weight: 600 !important;
-        font-size: 0.875rem !important;
-        transition: all 0.3s ease !important;
-        box-shadow: none !important;
-        width: 100%;
-        white-space: nowrap;
-    }
-    
-    .nav-buttons-container .stButton > button:hover {
-        background: #6b7280 !important;
-        color: white !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3) !important;
-    }
-    
-    /* Active state for selected button */
-    .nav-buttons-container .stButton > button:active,
-    .nav-buttons-container .stButton > button:focus {
-        background: #4b5563 !important;
-        color: white !important;
-    }
-    
-    /* Navigation buttons styling */
-    .nav-button {
-        background: white !important;
-        color: #2d2d2d !important;
-        border: 2px solid #e0e0e0 !important;
-    }
-    
-    .nav-button:hover {
-        border-color: #fbbf24 !important;
-        background: #fffbeb !important;
-    }
-    
+
     /* Subheader styling */
     h3 {
         color: #2d2d2d;
