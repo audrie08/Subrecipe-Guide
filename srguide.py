@@ -18,6 +18,7 @@ st.markdown("""
     .block-container {
         max-width: 1450px;
         padding-left: 5rem;
+        padding-left: 5rem;
         padding-right: 5rem;
         padding-top: 1rem;
         padding-bottom: 1rem;
@@ -27,15 +28,15 @@ st.markdown("""
     .main-header {
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
         padding: 2rem 2.5rem;
-        border-radius: 16px;
-        border-bottom: 3px solid #f59e0b;
+        border-radius: 25px;
+        border-bottom: 5px solid #f59e0b;
         margin-bottom: 2rem;
     }
     
     .main-header h1 {
         color: #2d2d2d;
-        font-size: 2rem;
-        font-weight: 700;
+        font-size: 3rem;
+        font-weight: 800;
         margin: 0;
     }
     
@@ -62,7 +63,7 @@ st.markdown("""
         top: 0;
         left: 0;
         width: 100%;
-        height: 4px;
+        height: 3px;
         background: linear-gradient(90deg, #1f2937 0%, #374151 100%);
     }
     
@@ -122,8 +123,8 @@ st.markdown("""
         transform: translateY(0px);
     }
     
-    /* Navigation container styling */
-    .nav-container {
+    /* Navigation buttons container styling */
+    .nav-buttons-container {
         background: #e5e7eb;
         padding: 0.5rem;
         border-radius: 30px;
@@ -136,12 +137,12 @@ st.markdown("""
     }
     
     /* Navigation buttons - override Streamlit default */
-    .nav-container .stButton {
+    .nav-buttons-container .stButton {
         flex: 1;
         margin: 0 !important;
     }
     
-    .nav-container .stButton > button {
+    .nav-buttons-container .stButton > button {
         background: transparent !important;
         color: #6b7280 !important;
         border: none !important;
@@ -155,7 +156,7 @@ st.markdown("""
         white-space: nowrap;
     }
     
-    .nav-container .stButton > button:hover {
+    .nav-buttons-container .stButton > button:hover {
         background: #6b7280 !important;
         color: white !important;
         transform: translateY(-1px);
@@ -163,8 +164,8 @@ st.markdown("""
     }
     
     /* Active state for selected button */
-    .nav-container .stButton > button:active,
-    .nav-container .stButton > button:focus {
+    .nav-buttons-container .stButton > button:active,
+    .nav-buttons-container .stButton > button:focus {
         background: #4b5563 !important;
         color: white !important;
     }
