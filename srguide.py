@@ -101,7 +101,7 @@ st.markdown("""
     
     /* Button styling */
     .stButton > button {
-        background: #2d2d2d !important;
+        background: #6b7280 !important;
         color: white !important;
         border: none !important;
         padding: 0.75rem 2rem !important;
@@ -115,7 +115,7 @@ st.markdown("""
     .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 16px rgba(107, 114, 128, 0.35) !important;
-        background: #2d2d2d  !important;
+        background: #4b5563   !important;
     }
     
     .stButton > button:active {
