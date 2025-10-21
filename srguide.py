@@ -101,8 +101,8 @@ st.markdown("""
     
     /* Button styling */
     .stButton > button {
-        background: #6b7280 !important;
-        color: white !important;
+        background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
+        color: #2d2d2d !important;
         border: none !important;
         padding: 0.75rem 2rem !important;
         border-radius: 25px !important;
@@ -115,7 +115,7 @@ st.markdown("""
     .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 16px rgba(107, 114, 128, 0.35) !important;
-        background: #4b5563   !important;
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
     }
     
     .stButton > button:active {
