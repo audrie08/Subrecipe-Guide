@@ -115,7 +115,7 @@ st.markdown("""
     .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 16px rgba(107, 114, 128, 0.35) !important;
-        background: #4b5563 !important;
+        background: #2d2d2d  !important;
     }
     
     .stButton > button:active {
