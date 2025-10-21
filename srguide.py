@@ -26,22 +26,22 @@ st.markdown("""
     /* Header styling */
     .main-header {
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
-        padding: 2rem 2.5rem;
-        border-radius: 16px;
-        border-bottom: 3px solid #f59e0b;
+        padding: 2rem 2rem;
+        border-radius: 25px;
+        border-bottom: 5px solid #f59e0b;
         margin-bottom: 2rem;
     }
     
     .main-header h1 {
         color: #2d2d2d;
-        font-size: 2rem;
-        font-weight: 700;
+        font-size: 4rem;
+        font-weight: 900;
         margin: 0;
     }
     
     .main-header p {
         color: #5a5a5a;
-        font-size: 0.95rem;
+        font-size: 2rem;
         margin: 0;
     }
     
