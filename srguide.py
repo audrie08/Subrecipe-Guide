@@ -106,7 +106,7 @@ st.markdown("""
         border: none !important;
         padding: 0.75rem 2rem !important;
         border-radius: 25px !important;
-        font-weight: 900 !important;
+        font-weight: 1000 !important;
         font-size: 0.95rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
