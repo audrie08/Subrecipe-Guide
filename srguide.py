@@ -27,7 +27,7 @@ st.markdown("""
     .main-header {
         background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
         padding: 2rem 2.5rem;
-        border-radius: 16px;
+        border-radius: 25px;
         border-bottom: 3px solid #f59e0b;
         margin-bottom: 2rem;
     }
@@ -49,7 +49,7 @@ st.markdown("""
     div[data-testid="stMetric"] {
         background: white;
         padding: 1.8rem 1.5rem;
-        border-radius: 16px;
+        border-radius: 23px;
         border: 2px solid #374151;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         position: relative;
@@ -90,7 +90,7 @@ st.markdown("""
     /* Input styling */
     .stSelectbox > div > div, .stNumberInput > div > div > input {
         border: 2px solid #e0e0e0 !important;
-        border-radius: 15px !important;
+        border-radius: 17px !important;
         transition: all 0.3s ease !important;
     }
     
@@ -189,7 +189,7 @@ st.markdown("""
     
     /* Table styling */
     .ingredients-table-container, .wps-table-container {
-        border-radius: 12px;
+        border-radius: 15px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         margin: 20px 0;
         overflow: hidden;
@@ -267,7 +267,7 @@ st.markdown("""
         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
         color: white;
         padding: 1.2rem 1.5rem;
-        border-radius: 8px;
+        border-radius: 15px;
         display: inline-block;
         margin-top: 1rem;
     }
