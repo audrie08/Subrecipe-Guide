@@ -34,14 +34,14 @@ st.markdown("""
     
     .main-header h1 {
         color: #2d2d2d;
-        font-size: 4rem;
-        font-weight: 900;
+        font-size: 3rem;
+        font-weight: 800;
         margin: 0;
     }
     
     .main-header p {
         color: #5a5a5a;
-        font-size: 2rem;
+        font-size: 1rem;
         margin: 0;
     }
     
