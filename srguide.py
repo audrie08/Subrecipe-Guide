@@ -498,7 +498,7 @@ def load_pack_size_data():
         sh = gc.open_by_key(spreadsheet_id)
 
         # Get sheet index 9 (10th sheet)
-        worksheet = sh.get_worksheet(9)
+        worksheet = sh.get_worksheet(7)
         data = worksheet.get_all_values()
         
         if len(data) < 5:
