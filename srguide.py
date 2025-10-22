@@ -498,7 +498,7 @@ def load_pack_size_data():
         sh = gc.open_by_key(spreadsheet_id)
 
         # Get sheet index 9 (10th sheet)
-        worksheet = sh.get_worksheet(7)
+        worksheet = sh.get_worksheet(9)
         data = worksheet.get_all_values()
         
         if len(data) < 5:
@@ -679,10 +679,29 @@ if st.session_state.page == "subrecipe":
                         # Calculate total quantity (multiply by batch input)
                         total_qty = qty_conversion * batch_input
                         
+                        # Find pack size for this ingredient
+                        pack_size_value = ""
+                        if not pack_size_df.empty:
+                            # Normalize the ingredient name for matching
+                            name_normalized = ingredient_name.strip().lower()
+                            
+                            # Find matching row in pack size data
+                            pack_row = pack_size_df[
+                                pack_size_df['_normalized_raw_material'] == name_normalized
+                            ]
+                            
+                            if not pack_row.empty:
+                                # Get value from column B (index 1)
+                                if len(pack_row.iloc[0]) > 1:
+                                    pack_value = pack_row.iloc[0].iloc[1]
+                                    if pd.notna(pack_value) and pack_value != '':
+                                        pack_size_value = str(pack_value)
+                        
                         # Only add if qty_conversion is not 0
                         if qty_conversion != 0:
                             ingredients_display.append({
                                 "Ingredient": ingredient_name,
+                                "Pack Size": pack_size_value,
                                 "Qty per Batch (KG)": f"{qty_conversion:.3f}",
                                 "Total Qty (KG)": f"{total_qty:.3f}",
                                 "UOM": "KG"
@@ -901,27 +920,8 @@ elif st.session_state.page == "wps":
                             # Calculate difference
                             difference = total_qty - beginning_inv
                             
-                            # Find pack size for this ingredient
-                            pack_size = ""
-                            if not pack_size_df.empty:
-                                # Normalize the ingredient name for matching
-                                name_normalized = name.strip().lower()
-                                
-                                # Find matching row in pack size data
-                                pack_row = pack_size_df[
-                                    pack_size_df['_normalized_raw_material'] == name_normalized
-                                ]
-                                
-                                if not pack_row.empty:
-                                    # Get value from column B (index 1)
-                                    if len(pack_row.iloc[0]) > 1:
-                                        pack_value = pack_row.iloc[0].iloc[1]
-                                        if pd.notna(pack_value) and pack_value != '':
-                                            pack_size = str(pack_value)
-                            
                             ingredients_list.append({
                                 "Raw Material": name,
-                                "Pack Size": pack_size,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
                                 "Beginning (KG)": f"{beginning_inv:.3f}",
                                 "Difference (KG)": f"<b>{difference:.3f}</b>"
