@@ -486,12 +486,52 @@ def load_beginning_inventory_data():
         st.error(f"Error loading beginning inventory data: {str(e)}")
         return pd.DataFrame()
 
+def load_pack_size_data():
+    """Load pack size data from sheet index 9 (10th sheet)"""
+    credentials = load_credentials()
+    if not credentials:
+        return pd.DataFrame()
+
+    try:
+        gc = gspread.authorize(credentials)
+        spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+        sh = gc.open_by_key(spreadsheet_id)
+
+        # Get sheet index 9 (10th sheet)
+        worksheet = sh.get_worksheet(9)
+        data = worksheet.get_all_values()
+        
+        if len(data) < 5:
+            st.warning("Not enough data in sheet index 9 for pack size")
+            return pd.DataFrame()
+
+        # Header is at row 5 (index 4), data starts at row 6 (index 5)
+        headers = data[4]
+        data_rows = data[5:]
+        
+        # Create DataFrame
+        df = pd.DataFrame(data_rows, columns=headers)
+        
+        # Clean the data
+        df = df.replace('', pd.NA)
+        
+        # Add normalized column for raw material names (Column A, index 0)
+        if len(df.columns) > 0:
+            df['_normalized_raw_material'] = df.iloc[:, 0].astype(str).str.strip().str.lower()
+        
+        return df
+
+    except Exception as e:
+        st.error(f"Error loading pack size data: {str(e)}")
+        return pd.DataFrame()
+
 # Load data
 subrecipe_df = load_subrecipe_data()
 batch_df = load_batch_data()
 ingredients_df = load_ingredients_data()
 wps_df = load_wps_data()
 beginning_inventory_df = load_beginning_inventory_data()
+pack_size_df = load_pack_size_data()
 
 # Page routing
 if st.session_state.page == "subrecipe":
@@ -861,8 +901,27 @@ elif st.session_state.page == "wps":
                             # Calculate difference
                             difference = total_qty - beginning_inv
                             
+                            # Find pack size for this ingredient
+                            pack_size = ""
+                            if not pack_size_df.empty:
+                                # Normalize the ingredient name for matching
+                                name_normalized = name.strip().lower()
+                                
+                                # Find matching row in pack size data
+                                pack_row = pack_size_df[
+                                    pack_size_df['_normalized_raw_material'] == name_normalized
+                                ]
+                                
+                                if not pack_row.empty:
+                                    # Get value from column B (index 1)
+                                    if len(pack_row.iloc[0]) > 1:
+                                        pack_value = pack_row.iloc[0].iloc[1]
+                                        if pd.notna(pack_value) and pack_value != '':
+                                            pack_size = str(pack_value)
+                            
                             ingredients_list.append({
                                 "Raw Material": name,
+                                "Pack Size": pack_size,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
                                 "Beginning (KG)": f"{beginning_inv:.3f}",
                                 "Difference (KG)": f"<b>{difference:.3f}</b>"
