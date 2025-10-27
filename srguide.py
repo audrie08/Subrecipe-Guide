@@ -911,7 +911,7 @@ elif st.session_state.page == "wps":
                                     # DQ is column 121 in Excel (1-based), so index 120 (0-based)
                                     if len(inv_row.iloc[0]) > 120:
                                         try:
-                                            inv_value = inv_row.iloc[0].iloc[120]
+                                            inv_value = inv_row.iloc[0].iloc[163]
                                             if pd.notna(inv_value) and inv_value != '':
                                                 beginning_inv = float(inv_value)
                                         except (ValueError, TypeError, IndexError):
