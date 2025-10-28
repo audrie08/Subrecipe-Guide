@@ -998,8 +998,6 @@ elif st.session_state.page == "wps":
                         st.markdown(f"""
                             <div class="total-weight-box">
                                 <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG<br>
-                                <span class="weight-label">Total Beginning:</span> {total_beginning:.3f} KG<br>
-                                <span class="weight-label">Total Difference:</span> {total_difference:.3f} KG
                             </div>
                         """, unsafe_allow_html=True)
                     else:
