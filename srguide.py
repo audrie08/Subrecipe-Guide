@@ -892,8 +892,6 @@ elif st.session_state.page == "wps":
                     if all_ingredients:
                         ingredients_list = []
                         total_price_sum = 0
-                                               
-                        st.markdown("---")
                         
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
@@ -926,7 +924,6 @@ elif st.session_state.page == "wps":
                             # Find price and qty conversion for this ingredient
                             price = 0
                             qty_conv = 1  # Default to 1 to avoid division by zero
-                            price_found = False
                             
                             if not ingredients_df.empty:
                                 name_normalized = name.strip().lower()
@@ -945,10 +942,7 @@ elif st.session_state.page == "wps":
                                                 # Remove peso sign and commas, then convert to float
                                                 price_str = str(price_value).replace('₱', '').replace(',', '').strip()
                                                 price = float(price_str)
-                                                price_found = True
-                                        except (ValueError, TypeError, IndexError) as e:
-                                            if name == ingredient_order[0]:
-                                                st.write(f"**Error parsing price:** {e}")
+                                        except (ValueError, TypeError, IndexError):
                                             price = 0
                                     
                                     # Get qty conversion from column D (index 3)
@@ -959,9 +953,7 @@ elif st.session_state.page == "wps":
                                                 qty_conv = float(qty_conv_value)
                                                 if qty_conv == 0:
                                                     qty_conv = 1  # Avoid division by zero
-                                        except (ValueError, TypeError, IndexError) as e:
-                                            if name == ingredient_order[0]:
-                                                st.write(f"**Error parsing qty_conv:** {e}")
+                                        except (ValueError, TypeError, IndexError):
                                             qty_conv = 1
                             
                             # Calculate total price: (Total Qty / Qty Conversion) * Price
@@ -971,6 +963,8 @@ elif st.session_state.page == "wps":
                             ingredients_list.append({
                                 "Raw Material": name,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
+                                "Beginning (KG)": f"{beginning_inv:.3f}",
+                                "Difference (KG)": f"<b>{difference:.3f}</b>"
                             })
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
@@ -998,6 +992,8 @@ elif st.session_state.page == "wps":
                         st.markdown(table_html, unsafe_allow_html=True)
                         
                         total_materials = sum(all_ingredients.values())
+                        total_beginning = sum([float(item["Beginning (KG)"]) for item in ingredients_list])
+                        total_difference = total_materials - total_beginning
                         
                         st.markdown(f"""
                             <div class="total-weight-box">
