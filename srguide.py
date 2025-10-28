@@ -892,18 +892,7 @@ elif st.session_state.page == "wps":
                     if all_ingredients:
                         ingredients_list = []
                         total_price_sum = 0
-                        
-                        # DEBUG: Show sample data from ingredients_df
-                        st.markdown("### 🔍 DEBUG INFO")
-                        if not ingredients_df.empty:
-                            st.write("**Sample ingredients_df data (first 5 rows):**")
-                            debug_df = ingredients_df.iloc[:5, [0, 1, 3, 4]].copy()
-                            debug_df.columns = ['Subrecipe', 'Ingredient', 'Qty Conv (Col D)', 'Price (Col E)']
-                            st.dataframe(debug_df)
-                            
-                            st.write(f"**Total rows in ingredients_df:** {len(ingredients_df)}")
-                            st.write(f"**Columns in ingredients_df:** {len(ingredients_df.columns)}")
-                        
+                                               
                         st.markdown("---")
                         
                         for name in ingredient_order:
@@ -946,16 +935,6 @@ elif st.session_state.page == "wps":
                                 price_row = ingredients_df[
                                     ingredients_df['_normalized_ingredient'] == name_normalized
                                 ]
-                                
-                                # DEBUG: Show if match was found
-                                if name == ingredient_order[0]:  # Only show for first ingredient to avoid clutter
-                                    st.write(f"**Searching for ingredient:** '{name}' (normalized: '{name_normalized}')")
-                                    st.write(f"**Matches found:** {len(price_row)}")
-                                    if not price_row.empty:
-                                        st.write(f"**Sample match data:**")
-                                        st.write(f"- Ingredient name in sheet: {price_row.iloc[0].iloc[1]}")
-                                        st.write(f"- Qty Conv (Col D, index 3): {price_row.iloc[0].iloc[3]}")
-                                        st.write(f"- Price (Col E, index 4): {price_row.iloc[0].iloc[4]}")
                                 
                                 if not price_row.empty:
                                     # Get price from column E (index 4)
