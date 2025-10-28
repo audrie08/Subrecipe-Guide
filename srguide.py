@@ -982,7 +982,7 @@ elif st.session_state.page == "wps":
                         total_difference = total_materials - total_beginning
                         
                         # Display totals side by side above the table
-                        col_total1, col_total2 = st.columns(2)
+                        col_total1, col_total2 = st.columns(2,1)
                         
                         with col_total1:
                             st.markdown(f"""
