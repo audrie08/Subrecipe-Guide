@@ -893,6 +893,19 @@ elif st.session_state.page == "wps":
                         ingredients_list = []
                         total_price_sum = 0
                         
+                        # DEBUG: Show sample data from ingredients_df
+                        st.markdown("### 🔍 DEBUG INFO")
+                        if not ingredients_df.empty:
+                            st.write("**Sample ingredients_df data (first 5 rows):**")
+                            debug_df = ingredients_df.iloc[:5, [0, 1, 3, 4]].copy()
+                            debug_df.columns = ['Subrecipe', 'Ingredient', 'Qty Conv (Col D)', 'Price (Col E)']
+                            st.dataframe(debug_df)
+                            
+                            st.write(f"**Total rows in ingredients_df:** {len(ingredients_df)}")
+                            st.write(f"**Columns in ingredients_df:** {len(ingredients_df.columns)}")
+                        
+                        st.markdown("---")
+                        
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
                             
@@ -924,6 +937,8 @@ elif st.session_state.page == "wps":
                             # Find price and qty conversion for this ingredient
                             price = 0
                             qty_conv = 1  # Default to 1 to avoid division by zero
+                            price_found = False
+                            
                             if not ingredients_df.empty:
                                 name_normalized = name.strip().lower()
                                 
@@ -932,6 +947,16 @@ elif st.session_state.page == "wps":
                                     ingredients_df['_normalized_ingredient'] == name_normalized
                                 ]
                                 
+                                # DEBUG: Show if match was found
+                                if name == ingredient_order[0]:  # Only show for first ingredient to avoid clutter
+                                    st.write(f"**Searching for ingredient:** '{name}' (normalized: '{name_normalized}')")
+                                    st.write(f"**Matches found:** {len(price_row)}")
+                                    if not price_row.empty:
+                                        st.write(f"**Sample match data:**")
+                                        st.write(f"- Ingredient name in sheet: {price_row.iloc[0].iloc[1]}")
+                                        st.write(f"- Qty Conv (Col D, index 3): {price_row.iloc[0].iloc[3]}")
+                                        st.write(f"- Price (Col E, index 4): {price_row.iloc[0].iloc[4]}")
+                                
                                 if not price_row.empty:
                                     # Get price from column E (index 4)
                                     if len(price_row.iloc[0]) > 4:
@@ -939,7 +964,10 @@ elif st.session_state.page == "wps":
                                             price_value = price_row.iloc[0].iloc[4]
                                             if pd.notna(price_value) and price_value != '':
                                                 price = float(price_value)
-                                        except (ValueError, TypeError, IndexError):
+                                                price_found = True
+                                        except (ValueError, TypeError, IndexError) as e:
+                                            if name == ingredient_order[0]:
+                                                st.write(f"**Error parsing price:** {e}")
                                             price = 0
                                     
                                     # Get qty conversion from column D (index 3)
@@ -950,12 +978,23 @@ elif st.session_state.page == "wps":
                                                 qty_conv = float(qty_conv_value)
                                                 if qty_conv == 0:
                                                     qty_conv = 1  # Avoid division by zero
-                                        except (ValueError, TypeError, IndexError):
+                                        except (ValueError, TypeError, IndexError) as e:
+                                            if name == ingredient_order[0]:
+                                                st.write(f"**Error parsing qty_conv:** {e}")
                                             qty_conv = 1
                             
                             # Calculate total price: (Total Qty / Qty Conversion) * Price
                             total_price = (total_qty / qty_conv) * price
                             total_price_sum += total_price
+                            
+                            # DEBUG: Show calculation for first ingredient
+                            if name == ingredient_order[0]:
+                                st.write(f"**Calculation for first ingredient:**")
+                                st.write(f"- Total Qty: {total_qty:.3f}")
+                                st.write(f"- Qty Conv: {qty_conv:.3f}")
+                                st.write(f"- Price: {price:.2f}")
+                                st.write(f"- Formula: ({total_qty:.3f} / {qty_conv:.3f}) × {price:.2f} = {total_price:.2f}")
+                                st.markdown("---")
                             
                             ingredients_list.append({
                                 "Raw Material": name,
