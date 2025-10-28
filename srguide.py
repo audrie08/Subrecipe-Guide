@@ -212,9 +212,16 @@ st.markdown("""
         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
         color: white;
         padding: 1.2rem 1.5rem;
-        border-radius: 25px;
+        border-radius: 15px;
         display: inline-block;
         margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .total-weight-box:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(31, 41, 55, 0.3);
+        background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
     }
     
     .total-weight-box .weight-label {
