@@ -989,15 +989,6 @@ elif st.session_state.page == "wps":
                             total_price = (total_qty / qty_conv) * price
                             total_price_sum += total_price
                             
-                            # DEBUG: Show calculation for first ingredient
-                            if name == ingredient_order[0]:
-                                st.write(f"**Calculation for first ingredient:**")
-                                st.write(f"- Total Qty: {total_qty:.3f}")
-                                st.write(f"- Qty Conv: {qty_conv:.3f}")
-                                st.write(f"- Price: {price:.2f}")
-                                st.write(f"- Formula: ({total_qty:.3f} / {qty_conv:.3f}) × {price:.2f} = {total_price:.2f}")
-                                st.markdown("---")
-                            
                             ingredients_list.append({
                                 "Raw Material": name,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
