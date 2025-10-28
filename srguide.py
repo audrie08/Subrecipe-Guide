@@ -963,7 +963,9 @@ elif st.session_state.page == "wps":
                                         try:
                                             price_value = price_row.iloc[0].iloc[4]
                                             if pd.notna(price_value) and price_value != '':
-                                                price = float(price_value)
+                                                # Remove peso sign and commas, then convert to float
+                                                price_str = str(price_value).replace('₱', '').replace(',', '').strip()
+                                                price = float(price_str)
                                                 price_found = True
                                         except (ValueError, TypeError, IndexError) as e:
                                             if name == ingredient_order[0]:
