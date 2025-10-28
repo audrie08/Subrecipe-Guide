@@ -971,8 +971,6 @@ elif st.session_state.page == "wps":
                             ingredients_list.append({
                                 "Raw Material": name,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
-                                "Beginning (KG)": f"{beginning_inv:.3f}",
-                                "Difference (KG)": f"<b>{difference:.3f}</b>"
                             })
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
@@ -1000,8 +998,6 @@ elif st.session_state.page == "wps":
                         st.markdown(table_html, unsafe_allow_html=True)
                         
                         total_materials = sum(all_ingredients.values())
-                        total_beginning = sum([float(item["Beginning (KG)"]) for item in ingredients_list])
-                        total_difference = total_materials - total_beginning
                         
                         st.markdown(f"""
                             <div class="total-weight-box">
