@@ -969,12 +969,27 @@ elif st.session_state.page == "wps":
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
                         
-                        # Display total price above the table
-                        st.markdown(f"""
-                            <div class="total-weight-box" style="margin-bottom: 1.5rem;">
-                                <span class="weight-label">Total Price:</span> ₱{total_price_sum:,.2f}
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # Calculate totals
+                        total_materials = sum(all_ingredients.values())
+                        total_beginning = sum([float(item["Beginning (KG)"]) for item in ingredients_list])
+                        total_difference = total_materials - total_beginning
+                        
+                        # Display totals side by side above the table
+                        col_total1, col_total2 = st.columns(2)
+                        
+                        with col_total1:
+                            st.markdown(f"""
+                                <div class="total-weight-box" style="margin-bottom: 1.5rem;">
+                                    <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        with col_total2:
+                            st.markdown(f"""
+                                <div class="total-weight-box" style="margin-bottom: 1.5rem;">
+                                    <span class="weight-label">Total Price:</span> ₱{total_price_sum:,.2f}
+                                </div>
+                            """, unsafe_allow_html=True)
                         
                         html_table = ingredients_display_df.to_html(
                             escape=False,
@@ -990,16 +1005,6 @@ elif st.session_state.page == "wps":
                         """
                         
                         st.markdown(table_html, unsafe_allow_html=True)
-                        
-                        total_materials = sum(all_ingredients.values())
-                        total_beginning = sum([float(item["Beginning (KG)"]) for item in ingredients_list])
-                        total_difference = total_materials - total_beginning
-                        
-                        st.markdown(f"""
-                            <div class="total-weight-box">
-                                <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG<br>
-                            </div>
-                        """, unsafe_allow_html=True)
                     else:
                         st.warning("No ingredients data found for selected subrecipes")
             else:
