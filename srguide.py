@@ -891,6 +891,7 @@ elif st.session_state.page == "wps":
                     # Display aggregated ingredients in order of appearance with Beginning Inventory
                     if all_ingredients:
                         ingredients_list = []
+                        total_price_sum = 0
                         
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
@@ -920,6 +921,42 @@ elif st.session_state.page == "wps":
                             # Calculate difference
                             difference = total_qty - beginning_inv
                             
+                            # Find price and qty conversion for this ingredient
+                            price = 0
+                            qty_conv = 1  # Default to 1 to avoid division by zero
+                            if not ingredients_df.empty:
+                                name_normalized = name.strip().lower()
+                                
+                                # Find matching row in ingredients data
+                                price_row = ingredients_df[
+                                    ingredients_df['_normalized_ingredient'] == name_normalized
+                                ]
+                                
+                                if not price_row.empty:
+                                    # Get price from column E (index 4)
+                                    if len(price_row.iloc[0]) > 4:
+                                        try:
+                                            price_value = price_row.iloc[0].iloc[4]
+                                            if pd.notna(price_value) and price_value != '':
+                                                price = float(price_value)
+                                        except (ValueError, TypeError, IndexError):
+                                            price = 0
+                                    
+                                    # Get qty conversion from column D (index 3)
+                                    if len(price_row.iloc[0]) > 3:
+                                        try:
+                                            qty_conv_value = price_row.iloc[0].iloc[3]
+                                            if pd.notna(qty_conv_value) and qty_conv_value != '':
+                                                qty_conv = float(qty_conv_value)
+                                                if qty_conv == 0:
+                                                    qty_conv = 1  # Avoid division by zero
+                                        except (ValueError, TypeError, IndexError):
+                                            qty_conv = 1
+                            
+                            # Calculate total price: (Total Qty / Qty Conversion) * Price
+                            total_price = (total_qty / qty_conv) * price
+                            total_price_sum += total_price
+                            
                             ingredients_list.append({
                                 "Raw Material": name,
                                 "Total Qty (KG)": f"{total_qty:.3f}",
@@ -928,6 +965,13 @@ elif st.session_state.page == "wps":
                             })
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
+                        
+                        # Display total price above the table
+                        st.markdown(f"""
+                            <div class="total-weight-box" style="margin-bottom: 1.5rem;">
+                                <span class="weight-label">Total Price:</span> ₱{total_price_sum:,.2f}
+                            </div>
+                        """, unsafe_allow_html=True)
                         
                         html_table = ingredients_display_df.to_html(
                             escape=False,
