@@ -498,6 +498,30 @@ def load_beginning_inventory_data():
         st.error(f"Error loading beginning inventory data: {str(e)}")
         return pd.DataFrame()
 
+@st.cache_data(ttl=300)
+def get_beginning_inventory_row1():
+    """Get Row 1 data from beginning inventory sheet (the actual first row, not headers)"""
+    credentials = load_credentials()
+    if not credentials:
+        return []
+
+    try:
+        gc = gspread.authorize(credentials)
+        spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+        sh = gc.open_by_key(spreadsheet_id)
+
+        # Get sheet index 6 (7th sheet)
+        worksheet = sh.get_worksheet(6)
+        data = worksheet.get_all_values()
+        
+        if len(data) > 0:
+            return data[0]  # Return Row 1 (index 0)
+        return []
+
+    except Exception as e:
+        st.error(f"Error loading Row 1: {str(e)}")
+        return []
+
 def load_pack_size_data():
     """Load pack size data from sheet index 9 (10th sheet)"""
     credentials = load_credentials()
@@ -543,6 +567,7 @@ batch_df = load_batch_data()
 ingredients_df = load_ingredients_data()
 wps_df = load_wps_data()
 beginning_inventory_df = load_beginning_inventory_data()
+beginning_inventory_row1 = get_beginning_inventory_row1()
 pack_size_df = load_pack_size_data()
 
 # Page routing
@@ -1231,28 +1256,31 @@ elif st.session_state.page == "daily_inventory":
                             st.markdown("### 🔍 DEBUG: Date Matching")
                             
                             # Get date from Column B, Row 1 of beginning inventory sheet
-                            # Use the column headers from beginning_inventory_df instead of making new API call
                             date_in_col_b = None
                             matched = False
                             
-                            if not beginning_inventory_df.empty:
+                            if not beginning_inventory_df.empty and credentials:
                                 try:
-                                    # Get the column name for index 1 (Column B)
-                                    if len(beginning_inventory_df.columns) > 1:
-                                        # The header is the column name
-                                        col_b_header = beginning_inventory_df.columns[1]
-                                        
-                                        st.write(f"**Column B header (from DataFrame):** '{col_b_header}' (type: {type(col_b_header).__name__})")
-                                        
-                                        # If the header is a date string, use it
-                                        if isinstance(col_b_header, str):
-                                            date_in_col_b = col_b_header.strip()
-                                        else:
-                                            date_in_col_b = str(col_b_header).strip()
-                                        
-                                        st.write(f"**Date in Column B (cleaned):** '{date_in_col_b}'")
+                                    gc = gspread.authorize(credentials)
+                                    spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+                                    sh = gc.open_by_key(spreadsheet_id)
+                                    inv_worksheet = sh.get_worksheet(6)
+                                    
+                                    # Get Row 1 (actual first row, index 0)
+                                    row1_data = inv_worksheet.row_values(1)  # Row 1
+                                    
+                                    st.write(f"**Row 1 data (first 10 columns):**")
+                                    for idx, val in enumerate(row1_data[:10]):
+                                        st.write(f"Column {chr(65+idx)}: '{val}'")
+                                    
+                                    # Get Column B (index 1) from Row 1
+                                    if len(row1_data) > 1:
+                                        date_in_col_b = row1_data[1].strip()
+                                        st.write(f"**Date in Column B, Row 1:** '{date_in_col_b}'")
+                                    else:
+                                        st.warning("Column B not found in Row 1")
                                 except Exception as e:
-                                    st.error(f"Error getting Column B header: {e}")
+                                    st.error(f"Error reading Row 1: {e}")
                             
                             # Convert selected_day to date format (e.g., "3NOV" -> "Nov 3")
                             try:
