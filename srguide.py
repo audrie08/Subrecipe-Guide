@@ -1227,6 +1227,9 @@ elif st.session_state.page == "daily_inventory":
                         if all_ingredients:
                             ingredients_list = []
                             
+                            # DEBUG: Date matching
+                            st.markdown("### 🔍 DEBUG: Date Matching")
+                            
                             # Get date headers from beginning inventory sheet (Row 1)
                             date_column_map = {}
                             if not beginning_inventory_df.empty and credentials:
@@ -1237,19 +1240,31 @@ elif st.session_state.page == "daily_inventory":
                                     inv_worksheet = sh.get_worksheet(6)
                                     row1_headers = inv_worksheet.get_all_values()[0]  # Row 1 (index 0)
                                     
+                                    st.write(f"**Row 1 headers from beginning inventory (first 20):**")
+                                    for idx, header in enumerate(row1_headers[:20]):
+                                        st.write(f"Column {idx}: '{header}'")
+                                    
                                     # Create mapping of date to column index
                                     for idx, header in enumerate(row1_headers):
                                         if header.strip():
                                             date_column_map[header.strip()] = idx
-                                except:
-                                    pass
+                                    
+                                    st.write(f"**Date column mapping (non-empty headers):**")
+                                    st.write(date_column_map)
+                                except Exception as e:
+                                    st.error(f"Error loading Row 1: {e}")
                             
                             # Convert selected_day to date format (e.g., "3NOV" -> "Nov 3")
                             import datetime
                             try:
+                                st.write(f"**Selected day from dropdown:** '{selected_day}'")
+                                
                                 # Parse the day format (e.g., "3NOV", "4NOV")
                                 day_num = ''.join(filter(str.isdigit, selected_day))
                                 month_abbr = ''.join(filter(str.isalpha, selected_day))
+                                
+                                st.write(f"- Extracted day number: '{day_num}'")
+                                st.write(f"- Extracted month abbreviation: '{month_abbr}'")
                                 
                                 # Convert to "Nov 3" format
                                 month_map = {
@@ -1259,11 +1274,22 @@ elif st.session_state.page == "daily_inventory":
                                 }
                                 
                                 formatted_date = f"{month_map.get(month_abbr.upper(), month_abbr)} {day_num}"
-                            except:
+                                st.write(f"**Formatted date for matching:** '{formatted_date}'")
+                            except Exception as e:
                                 formatted_date = selected_day
+                                st.error(f"Error formatting date: {e}")
                             
                             # Find column index for the selected date
                             selected_date_column = date_column_map.get(formatted_date, None)
+                            
+                            if selected_date_column is not None:
+                                st.success(f"✅ Date '{formatted_date}' FOUND in Column {selected_date_column}")
+                            else:
+                                st.warning(f"❌ Date '{formatted_date}' NOT FOUND in Row 1 headers")
+                                st.write("**All available dates in Row 1:**")
+                                st.write(list(date_column_map.keys()))
+                            
+                            st.markdown("---")
                             
                             for name in ingredient_order:
                                 total_qty = all_ingredients[name]
