@@ -919,7 +919,7 @@ elif st.session_state.page == "wps":
                     # Display Total Raw Materials below title
                     st.markdown(f"""
                         <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                            <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
+                            <span class="weight-label">Weekly Beginning Total Raw Materials:</span> {total_materials:.3f} KG
                         </div>
                     """, unsafe_allow_html=True)
                     
@@ -948,7 +948,7 @@ elif st.session_state.page == "wps":
                     # Display Total Price below title
                     st.markdown(f"""
                         <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                            <span class="weight-label">Total Price:</span> ₱{total_price_sum:,.2f}
+                            <span class="weight-label">Weekly Beginning Total Price:</span> ₱{total_price_sum:,.2f}
                         </div>
                     """, unsafe_allow_html=True)
                     
