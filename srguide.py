@@ -484,9 +484,9 @@ def load_beginning_inventory_data():
         # Clean the data
         df = df.replace('', pd.NA)
         
-        # Add normalized column for raw material names (Column A, index 0)
-        if len(df.columns) > 0:
-            df['_normalized_raw_material'] = df.iloc[:, 0].astype(str).str.strip().str.lower()
+        # Add normalized column for ingredient names (Column C, index 2) for matching with recipes
+        if len(df.columns) > 2:
+            df['_normalized_raw_material'] = df.iloc[:, 2].astype(str).str.strip().str.lower()
         
         return df
 
@@ -1019,18 +1019,16 @@ elif st.session_state.page == "wps":
                                     st.markdown("---")
                                 
                                 if not inv_row.empty:
-                                    # Get beginning inventory value - assuming it's in a specific column
-                                    # You can change the column index here based on your sheet structure
+                                    # Get beginning inventory value from Column A (index 0)
                                     try:
-                                        # Try to get from column B (index 1) first, which might be the quantity column
-                                        if len(inv_row.iloc[0]) > 1:
-                                            inv_value = inv_row.iloc[0].iloc[1]
+                                        if len(inv_row.iloc[0]) > 0:
+                                            inv_value = inv_row.iloc[0].iloc[0]
                                             if pd.notna(inv_value) and inv_value != '':
                                                 beginning_inv = float(inv_value)
                                                 
                                                 # DEBUG for first ingredient
                                                 if name == ingredient_order[0]:
-                                                    st.write(f"- Successfully parsed: {beginning_inv}")
+                                                    st.write(f"- Successfully parsed beginning inventory: {beginning_inv}")
                                     except (ValueError, TypeError, IndexError) as e:
                                         beginning_inv = 0
                                         if name == ingredient_order[0]:
