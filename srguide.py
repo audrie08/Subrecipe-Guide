@@ -212,7 +212,7 @@ st.markdown("""
         background: linear-gradient(135deg, #2d2d2d 0%, #4a4a4a 100%);
         color: white;
         padding: 1.2rem 1.5rem;
-        border-radius: 23px;
+        border-radius: 15px;
         display: inline-block;
         margin-top: 1rem;
         transition: all 0.3s ease;
@@ -828,10 +828,99 @@ elif st.session_state.page == "wps":
             display_df = display_df.drop(columns=['_normalized'])
             
             if not display_df.empty:
+                # Aggregate ingredients maintaining subrecipe order FIRST
+                all_ingredients = {}
+                ingredient_order = []  # Track order of first appearance
+                
+                for idx, row in display_df.iterrows():
+                    subrecipe_name = row['Subrecipe']
+                    total_batches = row['Total_Batches']
+                    
+                    # Find ingredients for this subrecipe
+                    subrecipe_normalized = subrecipe_name.strip().lower()
+                    recipe_ingredients = ingredients_df[
+                        ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
+                    ].copy()
+                    
+                    if not recipe_ingredients.empty:
+                        # Remove duplicates
+                        recipe_ingredients = recipe_ingredients.drop_duplicates(
+                            subset=['_normalized_subrecipe', '_normalized_ingredient'],
+                            keep='first'
+                        )
+                        
+                        for _, ing_row in recipe_ingredients.iterrows():
+                            ingredient_name = ing_row.iloc[1] if pd.notna(ing_row.iloc[1]) else "N/A"
+                            qty_conversion = 0
+                            
+                            if len(ing_row) > 3 and pd.notna(ing_row.iloc[3]):
+                                try:
+                                    qty_conversion = float(ing_row.iloc[3])
+                                except (ValueError, TypeError):
+                                    qty_conversion = 0
+                            
+                            if qty_conversion > 0:
+                                total_qty = qty_conversion * total_batches
+                                
+                                if ingredient_name not in all_ingredients:
+                                    ingredient_order.append(ingredient_name)
+                                    all_ingredients[ingredient_name] = total_qty
+                                else:
+                                    all_ingredients[ingredient_name] += total_qty
+                
+                # Calculate totals for display
+                total_materials = sum(all_ingredients.values()) if all_ingredients else 0
+                
+                # Calculate total price
+                total_price_sum = 0
+                if all_ingredients:
+                    for name in ingredient_order:
+                        total_qty = all_ingredients[name]
+                        
+                        # Find price and qty conversion
+                        price = 0
+                        qty_conv = 1
+                        
+                        if not ingredients_df.empty:
+                            name_normalized = name.strip().lower()
+                            price_row = ingredients_df[
+                                ingredients_df['_normalized_ingredient'] == name_normalized
+                            ]
+                            
+                            if not price_row.empty:
+                                if len(price_row.iloc[0]) > 4:
+                                    try:
+                                        price_value = price_row.iloc[0].iloc[4]
+                                        if pd.notna(price_value) and price_value != '':
+                                            price_str = str(price_value).replace('₱', '').replace(',', '').strip()
+                                            price = float(price_str)
+                                    except (ValueError, TypeError, IndexError):
+                                        price = 0
+                                
+                                if len(price_row.iloc[0]) > 3:
+                                    try:
+                                        qty_conv_value = price_row.iloc[0].iloc[3]
+                                        if pd.notna(qty_conv_value) and qty_conv_value != '':
+                                            qty_conv = float(qty_conv_value)
+                                            if qty_conv == 0:
+                                                qty_conv = 1
+                                    except (ValueError, TypeError, IndexError):
+                                        qty_conv = 1
+                        
+                        total_price = (total_qty / qty_conv) * price
+                        total_price_sum += total_price
+                
                 # Create two columns layout with adjusted widths
                 col_left, col_right = st.columns([2, 3])
                 
                 with col_left:
+                    # Display Total Raw Materials above SKU Weekly Batches
+                    st.markdown(f"""
+                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0;">
+                            <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
                     st.markdown("### SKU Weekly Batches")
                     # Display batch table (without Total_Batches column)
                     batch_display = display_df.drop(columns=['Total_Batches'])
@@ -853,52 +942,18 @@ elif st.session_state.page == "wps":
                     st.info(f"Total subrecipes: {len(display_df)}")
                 
                 with col_right:
+                    # Display Total Price above Raw Materials
+                    st.markdown(f"""
+                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0;">
+                            <span class="weight-label">Total Price:</span> ₱{total_price_sum:,.2f}
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
                     st.markdown("### Raw Materials")
-                    
-                    # Aggregate ingredients maintaining subrecipe order
-                    all_ingredients = {}
-                    ingredient_order = []  # Track order of first appearance
-                    
-                    for idx, row in display_df.iterrows():
-                        subrecipe_name = row['Subrecipe']
-                        total_batches = row['Total_Batches']
-                        
-                        # Find ingredients for this subrecipe
-                        subrecipe_normalized = subrecipe_name.strip().lower()
-                        recipe_ingredients = ingredients_df[
-                            ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
-                        ].copy()
-                        
-                        if not recipe_ingredients.empty:
-                            # Remove duplicates
-                            recipe_ingredients = recipe_ingredients.drop_duplicates(
-                                subset=['_normalized_subrecipe', '_normalized_ingredient'],
-                                keep='first'
-                            )
-                            
-                            for _, ing_row in recipe_ingredients.iterrows():
-                                ingredient_name = ing_row.iloc[1] if pd.notna(ing_row.iloc[1]) else "N/A"
-                                qty_conversion = 0
-                                
-                                if len(ing_row) > 3 and pd.notna(ing_row.iloc[3]):
-                                    try:
-                                        qty_conversion = float(ing_row.iloc[3])
-                                    except (ValueError, TypeError):
-                                        qty_conversion = 0
-                                
-                                if qty_conversion > 0:
-                                    total_qty = qty_conversion * total_batches
-                                    
-                                    if ingredient_name not in all_ingredients:
-                                        ingredient_order.append(ingredient_name)
-                                        all_ingredients[ingredient_name] = total_qty
-                                    else:
-                                        all_ingredients[ingredient_name] += total_qty
                     
                     # Display aggregated ingredients in order of appearance with Beginning Inventory
                     if all_ingredients:
                         ingredients_list = []
-                        total_price_sum = 0
                         
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
@@ -915,10 +970,11 @@ elif st.session_state.page == "wps":
                                 ]
                                 
                                 if not inv_row.empty:
-                                    # Get value from column DQ 
+                                    # Get value from column DQ (index 120 for Oct 20 Monday)
+                                    # DQ is column 121 in Excel (1-based), so index 120 (0-based)
                                     if len(inv_row.iloc[0]) > 120:
                                         try:
-                                            inv_value = inv_row.iloc[0].iloc[0]
+                                            inv_value = inv_row.iloc[0].iloc[163]
                                             if pd.notna(inv_value) and inv_value != '':
                                                 beginning_inv = float(inv_value)
                                         except (ValueError, TypeError, IndexError):
@@ -926,45 +982,6 @@ elif st.session_state.page == "wps":
                             
                             # Calculate difference
                             difference = total_qty - beginning_inv
-                            
-                            # Find price and qty conversion for this ingredient
-                            price = 0
-                            qty_conv = 1  # Default to 1 to avoid division by zero
-                            
-                            if not ingredients_df.empty:
-                                name_normalized = name.strip().lower()
-                                
-                                # Find matching row in ingredients data
-                                price_row = ingredients_df[
-                                    ingredients_df['_normalized_ingredient'] == name_normalized
-                                ]
-                                
-                                if not price_row.empty:
-                                    # Get price from column E (index 4)
-                                    if len(price_row.iloc[0]) > 4:
-                                        try:
-                                            price_value = price_row.iloc[0].iloc[4]
-                                            if pd.notna(price_value) and price_value != '':
-                                                # Remove peso sign and commas, then convert to float
-                                                price_str = str(price_value).replace('₱', '').replace(',', '').strip()
-                                                price = float(price_str)
-                                        except (ValueError, TypeError, IndexError):
-                                            price = 0
-                                    
-                                    # Get qty conversion from column D (index 3)
-                                    if len(price_row.iloc[0]) > 3:
-                                        try:
-                                            qty_conv_value = price_row.iloc[0].iloc[3]
-                                            if pd.notna(qty_conv_value) and qty_conv_value != '':
-                                                qty_conv = float(qty_conv_value)
-                                                if qty_conv == 0:
-                                                    qty_conv = 1  # Avoid division by zero
-                                        except (ValueError, TypeError, IndexError):
-                                            qty_conv = 1
-                            
-                            # Calculate total price: (Total Qty / Qty Conversion) * Price
-                            total_price = (total_qty / qty_conv) * price
-                            total_price_sum += total_price
                             
                             ingredients_list.append({
                                 "Raw Material": name,
@@ -974,28 +991,6 @@ elif st.session_state.page == "wps":
                             })
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
-                        
-                        # Calculate totals
-                        total_materials = sum(all_ingredients.values())
-                        total_beginning = sum([float(item["Beginning (KG)"]) for item in ingredients_list])
-                        total_difference = total_materials - total_beginning
-                        
-                        # Display totals side by side above the table
-                        col_total1, col_total2 = st.columns(2)
-                        
-                        with col_total1:
-                            st.markdown(f"""
-                                <div class="total-weight-box" style="margin-bottom: 1.5rem;">
-                                    <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
-                                </div>
-                            """, unsafe_allow_html=True)
-                        
-                        with col_total2:
-                            st.markdown(f"""
-                                <div class="total-weight-box" style="margin-bottom: 1.5rem;">
-                                    <span class="weight-label">Total Price:</span> ₱{total_price_sum:,.2f}
-                                </div>
-                            """, unsafe_allow_html=True)
                         
                         html_table = ingredients_display_df.to_html(
                             escape=False,
