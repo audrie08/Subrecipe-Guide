@@ -914,14 +914,15 @@ elif st.session_state.page == "wps":
                 col_left, col_right = st.columns([2, 3])
                 
                 with col_left:
-                    # Display Total Raw Materials above SKU Weekly Batches
+                    st.markdown("### SKU Weekly Batches")
+                    
+                    # Display Total Raw Materials below title
                     st.markdown(f"""
-                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0;">
+                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
                             <span class="weight-label">Total Raw Materials:</span> {total_materials:.3f} KG
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    st.markdown("### SKU Weekly Batches")
                     # Display batch table (without Total_Batches column)
                     batch_display = display_df.drop(columns=['Total_Batches'])
                     
@@ -942,14 +943,14 @@ elif st.session_state.page == "wps":
                     st.info(f"Total subrecipes: {len(display_df)}")
                 
                 with col_right:
-                    # Display Total Price above Raw Materials
+                    st.markdown("### Raw Materials")
+                    
+                    # Display Total Price below title
                     st.markdown(f"""
-                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0;">
+                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
                             <span class="weight-label">Total Price:</span> ₱{total_price_sum:,.2f}
                         </div>
                     """, unsafe_allow_html=True)
-                    
-                    st.markdown("### Raw Materials")
                     
                     # Display aggregated ingredients in order of appearance with Beginning Inventory
                     if all_ingredients:
