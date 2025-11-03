@@ -247,8 +247,8 @@ with col_nav1:
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("WPS", use_container_width=True, key="nav_wps"):
-        st.session_state.page = "wps"
+    if st.button("WEEKLY INVENTORY", use_container_width=True, key="nav_wps"):
+        st.session_state.page = "Weekly Inventory"
 
 # Initialize page state
 if 'page' not in st.session_state:
@@ -760,7 +760,7 @@ if st.session_state.page == "subrecipe":
     else:
         st.info("Please select a subrecipe to see the analytics")
 
-elif st.session_state.page == "wps":
+elif st.session_state.page == "Weekly Inventory":
     # WPS PAGE
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
