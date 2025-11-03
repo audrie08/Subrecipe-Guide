@@ -1000,8 +1000,23 @@ elif st.session_state.page == "wps":
                                     else:
                                         st.warning("No match found!")
                                         # Show what's actually in the normalized column
-                                        st.write("**Sample normalized values in sheet:**")
-                                        st.write(list(beginning_inventory_df['_normalized_raw_material'].head(10)))
+                                        st.write("**Sample normalized values in beginning inventory (first 20):**")
+                                        sample_values = list(beginning_inventory_df['_normalized_raw_material'].head(20))
+                                        for i, val in enumerate(sample_values):
+                                            st.write(f"{i+1}. '{val}'")
+                                        
+                                        # Check if any partial match exists
+                                        st.write(f"**Checking for partial matches with '{name_normalized}':**")
+                                        partial_matches = beginning_inventory_df[
+                                            beginning_inventory_df['_normalized_raw_material'].str.contains(name_normalized.split()[0] if name_normalized else '', na=False)
+                                        ]
+                                        if not partial_matches.empty:
+                                            st.write(f"Found {len(partial_matches)} partial matches:")
+                                            st.write(list(partial_matches['_normalized_raw_material'].head(10)))
+                                        else:
+                                            st.write("No partial matches found either.")
+                                    
+                                    st.markdown("---")
                                 
                                 if not inv_row.empty:
                                     # Get beginning inventory value - assuming it's in a specific column
