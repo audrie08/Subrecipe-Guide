@@ -247,8 +247,8 @@ with col_nav1:
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("Weekly Inventory", use_container_width=True, key="nav_wps"):
-        st.session_state.page = "Weekly Inventory"
+    if st.button("WPS", use_container_width=True, key="nav_wps"):
+        st.session_state.page = "wps"
 
 with col_nav3:
     if st.button("Daily Inventory", use_container_width=True, key="nav_daily"):
@@ -764,7 +764,7 @@ if st.session_state.page == "subrecipe":
     else:
         st.info("Please select a subrecipe to see the analytics")
 
-elif st.session_state.page == "Weekly Inventory":
+elif st.session_state.page == "wps":
     # WPS PAGE
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
@@ -1227,12 +1227,50 @@ elif st.session_state.page == "daily_inventory":
                         if all_ingredients:
                             ingredients_list = []
                             
+                            # Get date headers from beginning inventory sheet (Row 1)
+                            date_column_map = {}
+                            if not beginning_inventory_df.empty and credentials:
+                                try:
+                                    gc = gspread.authorize(credentials)
+                                    spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+                                    sh = gc.open_by_key(spreadsheet_id)
+                                    inv_worksheet = sh.get_worksheet(6)
+                                    row1_headers = inv_worksheet.get_all_values()[0]  # Row 1 (index 0)
+                                    
+                                    # Create mapping of date to column index
+                                    for idx, header in enumerate(row1_headers):
+                                        if header.strip():
+                                            date_column_map[header.strip()] = idx
+                                except:
+                                    pass
+                            
+                            # Convert selected_day to date format (e.g., "3NOV" -> "Nov 3")
+                            import datetime
+                            try:
+                                # Parse the day format (e.g., "3NOV", "4NOV")
+                                day_num = ''.join(filter(str.isdigit, selected_day))
+                                month_abbr = ''.join(filter(str.isalpha, selected_day))
+                                
+                                # Convert to "Nov 3" format
+                                month_map = {
+                                    'JAN': 'Jan', 'FEB': 'Feb', 'MAR': 'Mar', 'APR': 'Apr',
+                                    'MAY': 'May', 'JUN': 'Jun', 'JUL': 'Jul', 'AUG': 'Aug',
+                                    'SEP': 'Sep', 'OCT': 'Oct', 'NOV': 'Nov', 'DEC': 'Dec'
+                                }
+                                
+                                formatted_date = f"{month_map.get(month_abbr.upper(), month_abbr)} {day_num}"
+                            except:
+                                formatted_date = selected_day
+                            
+                            # Find column index for the selected date
+                            selected_date_column = date_column_map.get(formatted_date, None)
+                            
                             for name in ingredient_order:
                                 total_qty = all_ingredients[name]
                                 
-                                # Find beginning inventory for this ingredient from Column B (index 1)
+                                # Find beginning inventory for this ingredient
                                 beginning_inv = 0
-                                if not beginning_inventory_df.empty:
+                                if not beginning_inventory_df.empty and selected_date_column is not None:
                                     name_normalized = name.strip().lower()
                                     
                                     inv_row = beginning_inventory_df[
@@ -1240,14 +1278,15 @@ elif st.session_state.page == "daily_inventory":
                                     ]
                                     
                                     if not inv_row.empty:
-                                        # Get beginning inventory value from Column B (index 1)
+                                        # Get beginning inventory value from the matched date column
                                         try:
-                                            if len(inv_row.iloc[0]) > 1:
-                                                inv_value = inv_row.iloc[0].iloc[1]
+                                            if len(inv_row.iloc[0]) > selected_date_column:
+                                                inv_value = inv_row.iloc[0].iloc[selected_date_column]
                                                 if pd.notna(inv_value) and inv_value != '':
                                                     beginning_inv = float(inv_value)
                                         except (ValueError, TypeError, IndexError):
                                             beginning_inv = 0
+                                # If date not found in headers, beginning_inv remains 0
                                 
                                 # Calculate difference
                                 difference = total_qty - beginning_inv
