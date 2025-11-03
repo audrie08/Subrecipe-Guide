@@ -293,7 +293,7 @@ def load_credentials():
         return None
 
 # --- LOAD SUBRECIPE OPTIONS ---
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=300)
 def load_subrecipe_data():
     """Load subrecipe data from sheet index 1"""
     credentials = load_credentials()
@@ -330,7 +330,7 @@ def load_subrecipe_data():
         return pd.DataFrame()
 
 # --- LOAD BATCH DATA ---
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=300)
 def load_batch_data():
     """Load batch data from sheet index 4"""
     credentials = load_credentials()
@@ -367,7 +367,7 @@ def load_batch_data():
         return pd.DataFrame()
 
 # --- LOAD INGREDIENTS DATA ---
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=300)
 def load_ingredients_data():
     """Load ingredients data from sheet index 4 (5th sheet)"""
     credentials = load_credentials()
@@ -405,7 +405,7 @@ def load_ingredients_data():
         return pd.DataFrame()
 
 # --- LOAD WPS DATA ---
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=300)
 def load_wps_data():
     """Load WPS data from sheet index 5 (6th sheet)"""
     credentials = load_credentials()
@@ -458,7 +458,7 @@ def load_wps_data():
         return pd.DataFrame()
 
 # --- LOAD BEGINNING INVENTORY DATA ---
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=300)
 def load_beginning_inventory_data():
     """Load beginning inventory data from sheet index 6 (7th sheet)"""
     credentials = load_credentials()
@@ -1228,19 +1228,20 @@ elif st.session_state.page == "daily_inventory":
                             ingredients_list = []
                             
                             # Get date from Column B, Row 1 of beginning inventory sheet
+                            # Use the column headers from beginning_inventory_df instead of making new API call
                             date_in_col_b = None
                             matched = False
-                            if not beginning_inventory_df.empty and credentials:
+                            
+                            if not beginning_inventory_df.empty:
                                 try:
-                                    gc = gspread.authorize(credentials)
-                                    spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
-                                    sh = gc.open_by_key(spreadsheet_id)
-                                    inv_worksheet = sh.get_worksheet(6)
-                                    row1_data = inv_worksheet.get_all_values()[0]  # Row 1 (index 0)
-                                    
-                                    # Get Column B (index 1) from Row 1
-                                    if len(row1_data) > 1:
-                                        date_in_col_b = row1_data[1].strip()
+                                    # Get the column name for index 1 (Column B)
+                                    if len(beginning_inventory_df.columns) > 1:
+                                        # The header is the column name
+                                        col_b_header = beginning_inventory_df.columns[1]
+                                        
+                                        # If the header is a date string, use it
+                                        if isinstance(col_b_header, str):
+                                            date_in_col_b = col_b_header.strip()
                                 except:
                                     pass
                             
