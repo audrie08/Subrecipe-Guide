@@ -484,9 +484,9 @@ def load_beginning_inventory_data():
         # Clean the data
         df = df.replace('', pd.NA)
         
-        # Add normalized column for raw material names (Column B, index 1)
-        if len(df.columns) > 1:
-            df['_normalized_raw_material'] = df.iloc[:, 1].str.strip().str.lower()
+        # Add normalized column for raw material names (Column A, index 0)
+        if len(df.columns) > 0:
+            df['_normalized_raw_material'] = df.iloc[:, 0].astype(str).str.strip().str.lower()
         
         return df
 
@@ -972,13 +972,16 @@ elif st.session_state.page == "wps":
                                 ]
                                 
                                 if not inv_row.empty:
-                                    if len(inv_row.iloc[0]) > 120:
-                                        try:
-                                            inv_value = inv_row.iloc[0].iloc[0]
+                                    # Get beginning inventory value - assuming it's in a specific column
+                                    # You can change the column index here based on your sheet structure
+                                    try:
+                                        # Try to get from column B (index 1) first, which might be the quantity column
+                                        if len(inv_row.iloc[0]) > 1:
+                                            inv_value = inv_row.iloc[0].iloc[1]
                                             if pd.notna(inv_value) and inv_value != '':
                                                 beginning_inv = float(inv_value)
-                                        except (ValueError, TypeError, IndexError):
-                                            beginning_inv = 0
+                                    except (ValueError, TypeError, IndexError):
+                                        beginning_inv = 0
                             
                             # Calculate difference
                             difference = total_qty - beginning_inv
