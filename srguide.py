@@ -957,6 +957,19 @@ elif st.session_state.page == "wps":
                     if all_ingredients:
                         ingredients_list = []
                         
+                        # DEBUG: Show beginning inventory data structure
+                        st.markdown("### 🔍 DEBUG: Beginning Inventory Info")
+                        if not beginning_inventory_df.empty:
+                            st.write(f"**Total rows in beginning_inventory_df:** {len(beginning_inventory_df)}")
+                            st.write(f"**Total columns:** {len(beginning_inventory_df.columns)}")
+                            st.write(f"**Column names:** {list(beginning_inventory_df.columns[:10])}")  # Show first 10 columns
+                            st.write("**Sample data (first 5 rows, first 5 columns):**")
+                            st.dataframe(beginning_inventory_df.iloc[:5, :5])
+                        else:
+                            st.error("beginning_inventory_df is EMPTY!")
+                        
+                        st.markdown("---")
+                        
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
                             
@@ -966,10 +979,29 @@ elif st.session_state.page == "wps":
                                 # Normalize the ingredient name for matching
                                 name_normalized = name.strip().lower()
                                 
+                                # DEBUG: Show search details for first ingredient only
+                                if name == ingredient_order[0]:
+                                    st.write(f"**DEBUG: Searching for first ingredient**")
+                                    st.write(f"- Ingredient name: '{name}'")
+                                    st.write(f"- Normalized: '{name_normalized}'")
+                                
                                 # Find matching row in beginning inventory
                                 inv_row = beginning_inventory_df[
                                     beginning_inventory_df['_normalized_raw_material'] == name_normalized
                                 ]
+                                
+                                # DEBUG: Show match results for first ingredient
+                                if name == ingredient_order[0]:
+                                    st.write(f"- Matches found: {len(inv_row)}")
+                                    if not inv_row.empty:
+                                        st.write(f"- Matched row data (first 5 columns):")
+                                        st.write(inv_row.iloc[0, :5].to_dict())
+                                        st.write(f"- Value at index 1 (Column B): {inv_row.iloc[0].iloc[1]}")
+                                    else:
+                                        st.warning("No match found!")
+                                        # Show what's actually in the normalized column
+                                        st.write("**Sample normalized values in sheet:**")
+                                        st.write(list(beginning_inventory_df['_normalized_raw_material'].head(10)))
                                 
                                 if not inv_row.empty:
                                     # Get beginning inventory value - assuming it's in a specific column
@@ -980,8 +1012,14 @@ elif st.session_state.page == "wps":
                                             inv_value = inv_row.iloc[0].iloc[1]
                                             if pd.notna(inv_value) and inv_value != '':
                                                 beginning_inv = float(inv_value)
-                                    except (ValueError, TypeError, IndexError):
+                                                
+                                                # DEBUG for first ingredient
+                                                if name == ingredient_order[0]:
+                                                    st.write(f"- Successfully parsed: {beginning_inv}")
+                                    except (ValueError, TypeError, IndexError) as e:
                                         beginning_inv = 0
+                                        if name == ingredient_order[0]:
+                                            st.error(f"- Error parsing: {e}")
                             
                             # Calculate difference
                             difference = total_qty - beginning_inv
@@ -992,6 +1030,8 @@ elif st.session_state.page == "wps":
                                 "Beginning (KG)": f"{beginning_inv:,.2f}",
                                 "Difference (KG)": f"<b>{difference:,.2f}</b>"
                             })
+                        
+                        st.markdown("---")
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
                         
