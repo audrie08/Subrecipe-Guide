@@ -240,15 +240,19 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Navigation buttons under header
-col_nav1, col_nav2 = st.columns([1, 1])
+col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
 
 with col_nav1:
     if st.button("Subrecipe Guide", use_container_width=True, key="nav_subrecipe"):
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("WEEKLY INVENTORY", use_container_width=True, key="nav_wps"):
-        st.session_state.page = "Weekly Inventory"
+    if st.button("WPS", use_container_width=True, key="nav_wps"):
+        st.session_state.page = "wps"
+
+with col_nav3:
+    if st.button("Daily Inventory", use_container_width=True, key="nav_daily"):
+        st.session_state.page = "daily_inventory"
 
 # Initialize page state
 if 'page' not in st.session_state:
@@ -760,7 +764,7 @@ if st.session_state.page == "subrecipe":
     else:
         st.info("Please select a subrecipe to see the analytics")
 
-elif st.session_state.page == "Weekly Inventory":
+elif st.session_state.page == "wps":
     # WPS PAGE
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
@@ -1009,6 +1013,272 @@ elif st.session_state.page == "Weekly Inventory":
                         st.markdown(table_html, unsafe_allow_html=True)
                     else:
                         st.warning("No ingredients data found for selected subrecipes")
+            else:
+                st.warning("No valid WPS data found after filtering")
+        else:
+            st.error(f"Not enough columns in WPS data. Found {len(wps_df.columns)} columns, need at least 22.")
+
+elif st.session_state.page == "daily_inventory":
+    # DAILY INVENTORY PAGE
+    if wps_df.empty:
+        st.error("Unable to load WPS data. Please check your Google Sheets connection.")
+    else:
+        if len(wps_df.columns) > 21:
+            # Get the actual headers
+            credentials = load_credentials()
+            if credentials:
+                try:
+                    gc = gspread.authorize(credentials)
+                    spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
+                    sh = gc.open_by_key(spreadsheet_id)
+                    worksheet = sh.get_worksheet(5)
+                    header_row = worksheet.get_all_values()[9]
+                    batch_headers = [header_row[i] if i < len(header_row) else f'Batch {i-14}' for i in range(15, 22)]
+                except:
+                    batch_headers = [f'Batch {i}' for i in range(1, 8)]
+            else:
+                batch_headers = [f'Batch {i}' for i in range(1, 8)]
+            
+            # Select columns A and P-V
+            display_df = wps_df.iloc[:, [0] + list(range(15, 22))].copy()
+            column_names = ['Subrecipe'] + batch_headers
+            display_df.columns = column_names
+            
+            # Remove empty rows
+            display_df = display_df[display_df.iloc[:, 0].notna()]
+            display_df = display_df[display_df.iloc[:, 0] != '']
+            
+            # Normalize and filter
+            display_df['_normalized'] = display_df['Subrecipe'].str.strip().str.lower()
+            
+            exclude_terms = [
+                'hot kitchen', 'hot kitchen sauce', 'hot kitchen savory', 
+                'cold sauce', 'fabrication poultry', 'fabrication meats', 'pastry'
+            ]
+            
+            for term in exclude_terms:
+                display_df = display_df[display_df['_normalized'] != term]
+            
+            # Filter invalid batches
+            batch_cols = display_df.columns[1:-1]
+            
+            def has_valid_batch(row):
+                for col in batch_cols:
+                    val = str(row[col]).strip()
+                    if val and val != '':
+                        invalid_values = ['0', '0.0', '.0', '0.00', '.00', '-.0', '-0', '-0.0', '- .0']
+                        if val in invalid_values:
+                            continue
+                        try:
+                            num_val = float(val.replace(' ', ''))
+                            if num_val > 0:
+                                return True
+                        except (ValueError, TypeError):
+                            return True
+                return False
+            
+            display_df = display_df[display_df.apply(has_valid_batch, axis=1)]
+            display_df = display_df.drop(columns=['_normalized'])
+            
+            if not display_df.empty:
+                # Day filter dropdown
+                st.markdown("### Select Day")
+                day_options = batch_headers
+                selected_day = st.selectbox("Choose a day", options=day_options, key="day_filter")
+                
+                st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+                
+                # Get the column index for selected day
+                selected_day_index = batch_headers.index(selected_day) + 1  # +1 because column 0 is Subrecipe
+                
+                # Filter display_df to only show subrecipes with batches on selected day
+                filtered_display_df = display_df[
+                    pd.to_numeric(display_df.iloc[:, selected_day_index], errors='coerce').fillna(0) > 0
+                ].copy()
+                
+                if not filtered_display_df.empty:
+                    # Aggregate ingredients for selected day only
+                    all_ingredients = {}
+                    ingredient_order = []
+                    
+                    for idx, row in filtered_display_df.iterrows():
+                        subrecipe_name = row['Subrecipe']
+                        day_batches = pd.to_numeric(row.iloc[selected_day_index], errors='coerce')
+                        if pd.isna(day_batches):
+                            day_batches = 0
+                        
+                        # Find ingredients for this subrecipe
+                        subrecipe_normalized = subrecipe_name.strip().lower()
+                        recipe_ingredients = ingredients_df[
+                            ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
+                        ].copy()
+                        
+                        if not recipe_ingredients.empty:
+                            recipe_ingredients = recipe_ingredients.drop_duplicates(
+                                subset=['_normalized_subrecipe', '_normalized_ingredient'],
+                                keep='first'
+                            )
+                            
+                            for _, ing_row in recipe_ingredients.iterrows():
+                                ingredient_name = ing_row.iloc[1] if pd.notna(ing_row.iloc[1]) else "N/A"
+                                qty_conversion = 0
+                                
+                                if len(ing_row) > 3 and pd.notna(ing_row.iloc[3]):
+                                    try:
+                                        qty_conversion = float(ing_row.iloc[3])
+                                    except (ValueError, TypeError):
+                                        qty_conversion = 0
+                                
+                                if qty_conversion > 0:
+                                    total_qty = qty_conversion * day_batches
+                                    
+                                    if ingredient_name not in all_ingredients:
+                                        ingredient_order.append(ingredient_name)
+                                        all_ingredients[ingredient_name] = total_qty
+                                    else:
+                                        all_ingredients[ingredient_name] += total_qty
+                    
+                    # Calculate totals
+                    total_materials = sum(all_ingredients.values()) if all_ingredients else 0
+                    
+                    # Calculate total price
+                    total_price_sum = 0
+                    if all_ingredients:
+                        for name in ingredient_order:
+                            total_qty = all_ingredients[name]
+                            
+                            # Find price and qty conversion
+                            price = 0
+                            qty_conv = 1
+                            
+                            if not ingredients_df.empty:
+                                name_normalized = name.strip().lower()
+                                price_row = ingredients_df[
+                                    ingredients_df['_normalized_ingredient'] == name_normalized
+                                ]
+                                
+                                if not price_row.empty:
+                                    if len(price_row.iloc[0]) > 4:
+                                        try:
+                                            price_value = price_row.iloc[0].iloc[4]
+                                            if pd.notna(price_value) and price_value != '':
+                                                price_str = str(price_value).replace('₱', '').replace(',', '').strip()
+                                                price = float(price_str)
+                                        except (ValueError, TypeError, IndexError):
+                                            price = 0
+                                    
+                                    if len(price_row.iloc[0]) > 3:
+                                        try:
+                                            qty_conv_value = price_row.iloc[0].iloc[3]
+                                            if pd.notna(qty_conv_value) and qty_conv_value != '':
+                                                qty_conv = float(qty_conv_value)
+                                                if qty_conv == 0:
+                                                    qty_conv = 1
+                                        except (ValueError, TypeError, IndexError):
+                                            qty_conv = 1
+                            
+                            total_price = (total_qty / qty_conv) * price
+                            total_price_sum += total_price
+                    
+                    # Create two columns layout
+                    col_left, col_right = st.columns([2, 3])
+                    
+                    with col_left:
+                        st.markdown("### SKU Weekly Batches")
+                        
+                        # Display Total Raw Materials below title
+                        st.markdown(f"""
+                            <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
+                                <span class="weight-label">Daily Total Raw Materials ({selected_day}):</span> {total_materials:,.2f} KG
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Display batch table for selected day only
+                        batch_display = filtered_display_df[['Subrecipe', display_df.columns[selected_day_index]]]
+                        batch_display.columns = ['Subrecipe', selected_day]
+                        
+                        html_table = batch_display.to_html(
+                            escape=False,
+                            index=False,
+                            classes='wps-table',
+                            table_id='wps-table-daily'
+                        )
+                        
+                        table_html = f"""
+                        <div class="wps-table-container">
+                            {html_table}
+                        </div>
+                        """
+                        
+                        st.markdown(table_html, unsafe_allow_html=True)
+                        st.info(f"Total subrecipes: {len(filtered_display_df)}")
+                    
+                    with col_right:
+                        st.markdown("### Raw Materials")
+                        
+                        # Display Total Price below title
+                        st.markdown(f"""
+                            <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
+                                <span class="weight-label">Daily Total Price ({selected_day}):</span> ₱{total_price_sum:,.2f}
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Display aggregated ingredients
+                        if all_ingredients:
+                            ingredients_list = []
+                            
+                            for name in ingredient_order:
+                                total_qty = all_ingredients[name]
+                                
+                                # Find beginning inventory for this ingredient from Column B (index 1)
+                                beginning_inv = 0
+                                if not beginning_inventory_df.empty:
+                                    name_normalized = name.strip().lower()
+                                    
+                                    inv_row = beginning_inventory_df[
+                                        beginning_inventory_df['_normalized_raw_material'] == name_normalized
+                                    ]
+                                    
+                                    if not inv_row.empty:
+                                        # Get beginning inventory value from Column B (index 1)
+                                        try:
+                                            if len(inv_row.iloc[0]) > 1:
+                                                inv_value = inv_row.iloc[0].iloc[1]
+                                                if pd.notna(inv_value) and inv_value != '':
+                                                    beginning_inv = float(inv_value)
+                                        except (ValueError, TypeError, IndexError):
+                                            beginning_inv = 0
+                                
+                                # Calculate difference
+                                difference = total_qty - beginning_inv
+                                
+                                ingredients_list.append({
+                                    "Raw Material": name,
+                                    "Total Qty (KG)": f"{total_qty:,.2f}",
+                                    "Beginning (KG)": f"{beginning_inv:,.2f}",
+                                    "Difference (KG)": f"<b>{difference:,.2f}</b>"
+                                })
+                            
+                            ingredients_display_df = pd.DataFrame(ingredients_list)
+                            
+                            html_table = ingredients_display_df.to_html(
+                                escape=False,
+                                index=False,
+                                classes='wps-table',
+                                table_id='ingredients-explosion-daily'
+                            )
+                            
+                            table_html = f"""
+                            <div class="wps-table-container">
+                                {html_table}
+                            </div>
+                            """
+                            
+                            st.markdown(table_html, unsafe_allow_html=True)
+                        else:
+                            st.warning("No ingredients data found for selected day")
+                else:
+                    st.warning(f"No subrecipes scheduled for {selected_day}")
             else:
                 st.warning("No valid WPS data found after filtering")
         else:
