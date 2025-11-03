@@ -247,8 +247,8 @@ with col_nav1:
         st.session_state.page = "subrecipe"
 
 with col_nav2:
-    if st.button("WEEKLY INVENTORY", use_container_width=True, key="nav_wps"):
-        st.session_state.page = "Weekly Inventory"
+    if st.button("WPS", use_container_width=True, key="nav_wps"):
+        st.session_state.page = "wps"
 
 with col_nav3:
     if st.button("Daily Inventory", use_container_width=True, key="nav_daily"):
@@ -789,7 +789,7 @@ if st.session_state.page == "subrecipe":
     else:
         st.info("Please select a subrecipe to see the analytics")
 
-elif st.session_state.page == "Weekly Inventory":
+elif st.session_state.page == "wps":
     # WPS PAGE
     if wps_df.empty:
         st.error("Unable to load WPS data. Please check your Google Sheets connection.")
@@ -1316,14 +1316,9 @@ elif st.session_state.page == "daily_inventory":
                                             beginning_inv = 0
                                 # If date not matched, beginning_inv remains 0
                                 
-                                # Calculate difference
-                                difference = total_qty - beginning_inv
-                                
                                 ingredients_list.append({
                                     "Raw Material": name,
-                                    "Total Qty (KG)": f"{total_qty:,.2f}",
-                                    "Beginning (KG)": f"{beginning_inv:,.2f}",
-                                    "Difference (KG)": f"<b>{difference:,.2f}</b>"
+                                    "Inventory on Hand (KG)": f"{beginning_inv:,.2f}"
                                 })
                             
                             ingredients_display_df = pd.DataFrame(ingredients_list)
