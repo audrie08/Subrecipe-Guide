@@ -1227,9 +1227,6 @@ elif st.session_state.page == "daily_inventory":
                         if all_ingredients:
                             ingredients_list = []
                             
-                            # DEBUG: Date matching
-                            st.markdown("### 🔍 DEBUG: Date Matching")
-                            
                             # Get date from Column B, Row 1 of beginning inventory sheet
                             date_in_col_b = None
                             matched = False
@@ -1244,22 +1241,14 @@ elif st.session_state.page == "daily_inventory":
                                     # Get Column B (index 1) from Row 1
                                     if len(row1_data) > 1:
                                         date_in_col_b = row1_data[1].strip()
-                                        st.write(f"**Date in Column B, Row 1:** '{date_in_col_b}'")
-                                    else:
-                                        st.warning("Column B not found in Row 1")
-                                except Exception as e:
-                                    st.error(f"Error loading Row 1: {e}")
+                                except:
+                                    pass
                             
                             # Convert selected_day to date format (e.g., "3NOV" -> "Nov 3")
                             try:
-                                st.write(f"**Selected day from dropdown:** '{selected_day}'")
-                                
                                 # Parse the day format (e.g., "3NOV", "4NOV")
                                 day_num = ''.join(filter(str.isdigit, selected_day))
                                 month_abbr = ''.join(filter(str.isalpha, selected_day))
-                                
-                                st.write(f"- Extracted day number: '{day_num}'")
-                                st.write(f"- Extracted month abbreviation: '{month_abbr}'")
                                 
                                 # Convert to "Nov 3" format
                                 month_map = {
@@ -1269,21 +1258,13 @@ elif st.session_state.page == "daily_inventory":
                                 }
                                 
                                 formatted_date = f"{month_map.get(month_abbr.upper(), month_abbr)} {day_num}"
-                                st.write(f"**Formatted date for matching:** '{formatted_date}'")
                                 
                                 # Check if dates match
                                 if date_in_col_b and date_in_col_b == formatted_date:
                                     matched = True
-                                    st.success(f"✅ MATCH! Date '{formatted_date}' matches Column B Row 1")
-                                else:
-                                    matched = False
-                                    st.warning(f"❌ NO MATCH. Selected: '{formatted_date}' vs Column B: '{date_in_col_b}'")
                                     
-                            except Exception as e:
-                                formatted_date = selected_day
-                                st.error(f"Error formatting date: {e}")
-                            
-                            st.markdown("---")
+                            except:
+                                pass
                             
                             for name in ingredient_order:
                                 total_qty = all_ingredients[name]
