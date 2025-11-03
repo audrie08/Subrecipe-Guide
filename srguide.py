@@ -949,7 +949,7 @@ elif st.session_state.page == "Weekly Inventory":
                     # Display Total Raw Materials below title
                     st.markdown(f"""
                         <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                            <span class="weight-label">= Total Raw Materials Needed for the Week:</span> {total_materials:,.2f} KG
+                            <span class="weight-label">Total Raw Materials Needed for the Week:</span> {total_materials:,.2f} KG
                         </div>
                     """, unsafe_allow_html=True)
                     
