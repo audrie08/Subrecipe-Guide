@@ -710,8 +710,8 @@ if st.session_state.page == "subrecipe":
                             ingredients_display.append({
                                 "Ingredient": ingredient_name,
                                 "Pack Size": pack_size_value,
-                                "Qty per Batch (KG)": f"{qty_conversion:,.3f}",
-                                "Total Qty (KG)": f"{total_qty:,.3f}",
+                                "Qty per Batch (KG)": f"{qty_conversion:,.2f}",
+                                "Total Qty (KG)": f"{total_qty:,.2f}",
                                 "UOM": "KG"
                             })
                     
@@ -744,7 +744,7 @@ if st.session_state.page == "subrecipe":
                         with col_right:
                             st.markdown(f"""
                                 <div class="total-weight-box">
-                                    <span class="weight-label">Total Volume:</span> {total_weight:,.3f} KG
+                                    <span class="weight-label">Total Volume:</span> {total_weight:,.2f} KG
                                 </div>
                             """, unsafe_allow_html=True)
                     else:
@@ -920,7 +920,7 @@ elif st.session_state.page == "wps":
                     # Display Total Raw Materials below title
                     st.markdown(f"""
                         <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                            <span class="weight-label">Weekly Beginning Total Raw Materials:</span> {total_materials:,.3f} KG
+                            <span class="weight-label">Weekly Beginning Total Raw Materials:</span> {total_materials:,.2f} KG
                         </div>
                     """, unsafe_allow_html=True)
                     
@@ -987,9 +987,9 @@ elif st.session_state.page == "wps":
                             
                             ingredients_list.append({
                                 "Raw Material": name,
-                                "Total Qty (KG)": f"{total_qty:,.3f}",
-                                "Beginning (KG)": f"{beginning_inv:,.3f}",
-                                "Difference (KG)": f"<b>{difference:,.3f}</b>"
+                                "Total Qty (KG)": f"{total_qty:,.2f}",
+                                "Beginning (KG)": f"{beginning_inv:,.2f}",
+                                "Difference (KG)": f"<b>{difference:,.2f}</b>"
                             })
                         
                         ingredients_display_df = pd.DataFrame(ingredients_list)
