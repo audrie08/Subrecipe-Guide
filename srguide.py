@@ -1230,32 +1230,27 @@ elif st.session_state.page == "daily_inventory":
                             # DEBUG: Date matching
                             st.markdown("### 🔍 DEBUG: Date Matching")
                             
-                            # Get date headers from beginning inventory sheet (Row 1)
-                            date_column_map = {}
+                            # Get date from Column B, Row 1 of beginning inventory sheet
+                            date_in_col_b = None
+                            matched = False
                             if not beginning_inventory_df.empty and credentials:
                                 try:
                                     gc = gspread.authorize(credentials)
                                     spreadsheet_id = "1K7PTd9Y3X5j-5N_knPyZm8yxDEgxXFkVZOwnfQf98hQ"
                                     sh = gc.open_by_key(spreadsheet_id)
                                     inv_worksheet = sh.get_worksheet(6)
-                                    row1_headers = inv_worksheet.get_all_values()[0]  # Row 1 (index 0)
+                                    row1_data = inv_worksheet.get_all_values()[0]  # Row 1 (index 0)
                                     
-                                    st.write(f"**Row 1 headers from beginning inventory (first 20):**")
-                                    for idx, header in enumerate(row1_headers[:20]):
-                                        st.write(f"Column {idx}: '{header}'")
-                                    
-                                    # Create mapping of date to column index
-                                    for idx, header in enumerate(row1_headers):
-                                        if header.strip():
-                                            date_column_map[header.strip()] = idx
-                                    
-                                    st.write(f"**Date column mapping (non-empty headers):**")
-                                    st.write(date_column_map)
+                                    # Get Column B (index 1) from Row 1
+                                    if len(row1_data) > 1:
+                                        date_in_col_b = row1_data[1].strip()
+                                        st.write(f"**Date in Column B, Row 1:** '{date_in_col_b}'")
+                                    else:
+                                        st.warning("Column B not found in Row 1")
                                 except Exception as e:
                                     st.error(f"Error loading Row 1: {e}")
                             
                             # Convert selected_day to date format (e.g., "3NOV" -> "Nov 3")
-                            import datetime
                             try:
                                 st.write(f"**Selected day from dropdown:** '{selected_day}'")
                                 
@@ -1275,19 +1270,18 @@ elif st.session_state.page == "daily_inventory":
                                 
                                 formatted_date = f"{month_map.get(month_abbr.upper(), month_abbr)} {day_num}"
                                 st.write(f"**Formatted date for matching:** '{formatted_date}'")
+                                
+                                # Check if dates match
+                                if date_in_col_b and date_in_col_b == formatted_date:
+                                    matched = True
+                                    st.success(f"✅ MATCH! Date '{formatted_date}' matches Column B Row 1")
+                                else:
+                                    matched = False
+                                    st.warning(f"❌ NO MATCH. Selected: '{formatted_date}' vs Column B: '{date_in_col_b}'")
+                                    
                             except Exception as e:
                                 formatted_date = selected_day
                                 st.error(f"Error formatting date: {e}")
-                            
-                            # Find column index for the selected date
-                            selected_date_column = date_column_map.get(formatted_date, None)
-                            
-                            if selected_date_column is not None:
-                                st.success(f"✅ Date '{formatted_date}' FOUND in Column {selected_date_column}")
-                            else:
-                                st.warning(f"❌ Date '{formatted_date}' NOT FOUND in Row 1 headers")
-                                st.write("**All available dates in Row 1:**")
-                                st.write(list(date_column_map.keys()))
                             
                             st.markdown("---")
                             
@@ -1296,7 +1290,8 @@ elif st.session_state.page == "daily_inventory":
                                 
                                 # Find beginning inventory for this ingredient
                                 beginning_inv = 0
-                                if not beginning_inventory_df.empty and selected_date_column is not None:
+                                if not beginning_inventory_df.empty and matched:
+                                    # Only get beginning inventory if date matched
                                     name_normalized = name.strip().lower()
                                     
                                     inv_row = beginning_inventory_df[
@@ -1304,15 +1299,15 @@ elif st.session_state.page == "daily_inventory":
                                     ]
                                     
                                     if not inv_row.empty:
-                                        # Get beginning inventory value from the matched date column
+                                        # Get beginning inventory value from Column B (index 1)
                                         try:
-                                            if len(inv_row.iloc[0]) > selected_date_column:
-                                                inv_value = inv_row.iloc[0].iloc[selected_date_column]
+                                            if len(inv_row.iloc[0]) > 1:
+                                                inv_value = inv_row.iloc[0].iloc[1]
                                                 if pd.notna(inv_value) and inv_value != '':
                                                     beginning_inv = float(inv_value)
                                         except (ValueError, TypeError, IndexError):
                                             beginning_inv = 0
-                                # If date not found in headers, beginning_inv remains 0
+                                # If date not matched, beginning_inv remains 0
                                 
                                 # Calculate difference
                                 difference = total_qty - beginning_inv
