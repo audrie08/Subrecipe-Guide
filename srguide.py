@@ -1252,9 +1252,6 @@ elif st.session_state.page == "daily_inventory":
                         if all_ingredients:
                             ingredients_list = []
                             
-                            # DEBUG: Show date matching
-                            st.markdown("### 🔍 DEBUG: Date Matching")
-                            
                             # Get date from Column B, Row 1 of beginning inventory sheet
                             date_in_col_b = None
                             matched = False
@@ -1266,32 +1263,18 @@ elif st.session_state.page == "daily_inventory":
                                     sh = gc.open_by_key(spreadsheet_id)
                                     inv_worksheet = sh.get_worksheet(6)
                                     
-                                    # Get Row 1 (actual first row, index 0)
-                                    row1_data = inv_worksheet.row_values(1)  # Row 1
-                                    
-                                    st.write(f"**Row 1 data (first 10 columns):**")
-                                    for idx, val in enumerate(row1_data[:10]):
-                                        st.write(f"Column {chr(65+idx)}: '{val}'")
-                                    
-                                    # Get Column B (index 1) from Row 1
-                                    if len(row1_data) > 1:
-                                        date_in_col_b = row1_data[1].strip()
-                                        st.write(f"**Date in Column B, Row 1:** '{date_in_col_b}'")
-                                    else:
-                                        st.warning("Column B not found in Row 1")
-                                except Exception as e:
-                                    st.error(f"Error reading Row 1: {e}")
+                                    # Get only Column B, Row 1
+                                    date_in_col_b = inv_worksheet.cell(1, 2).value  # Row 1, Column B (col index 2)
+                                    if date_in_col_b:
+                                        date_in_col_b = date_in_col_b.strip()
+                                except:
+                                    pass
                             
                             # Convert selected_day to date format (e.g., "3NOV" -> "Nov 3")
                             try:
-                                st.write(f"**Selected day:** '{selected_day}'")
-                                
                                 # Parse the day format (e.g., "3NOV", "4NOV")
                                 day_num = ''.join(filter(str.isdigit, selected_day))
                                 month_abbr = ''.join(filter(str.isalpha, selected_day))
-                                
-                                st.write(f"- Day number: '{day_num}'")
-                                st.write(f"- Month abbreviation: '{month_abbr}'")
                                 
                                 # Convert to "Nov 3" format
                                 month_map = {
@@ -1301,22 +1284,13 @@ elif st.session_state.page == "daily_inventory":
                                 }
                                 
                                 formatted_date = f"{month_map.get(month_abbr.upper(), month_abbr)} {day_num}"
-                                st.write(f"**Formatted date for matching:** '{formatted_date}'")
                                 
                                 # Check if dates match
                                 if date_in_col_b and date_in_col_b == formatted_date:
                                     matched = True
-                                    st.success(f"✅ DATES MATCH! Will use beginning inventory from Column B")
-                                else:
-                                    matched = False
-                                    st.warning(f"❌ DATES DON'T MATCH - Beginning inventory will be 0.00")
-                                    st.write(f"Expected: '{formatted_date}'")
-                                    st.write(f"Got: '{date_in_col_b}'")
                                     
-                            except Exception as e:
-                                st.error(f"Error formatting date: {e}")
-                            
-                            st.markdown("---")
+                            except:
+                                pass
                             
                             for name in ingredient_order:
                                 total_qty = all_ingredients[name]
