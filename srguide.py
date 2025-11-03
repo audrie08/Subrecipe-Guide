@@ -1227,6 +1227,9 @@ elif st.session_state.page == "daily_inventory":
                         if all_ingredients:
                             ingredients_list = []
                             
+                            # DEBUG: Show date matching
+                            st.markdown("### 🔍 DEBUG: Date Matching")
+                            
                             # Get date from Column B, Row 1 of beginning inventory sheet
                             # Use the column headers from beginning_inventory_df instead of making new API call
                             date_in_col_b = None
@@ -1239,17 +1242,28 @@ elif st.session_state.page == "daily_inventory":
                                         # The header is the column name
                                         col_b_header = beginning_inventory_df.columns[1]
                                         
+                                        st.write(f"**Column B header (from DataFrame):** '{col_b_header}' (type: {type(col_b_header).__name__})")
+                                        
                                         # If the header is a date string, use it
                                         if isinstance(col_b_header, str):
                                             date_in_col_b = col_b_header.strip()
-                                except:
-                                    pass
+                                        else:
+                                            date_in_col_b = str(col_b_header).strip()
+                                        
+                                        st.write(f"**Date in Column B (cleaned):** '{date_in_col_b}'")
+                                except Exception as e:
+                                    st.error(f"Error getting Column B header: {e}")
                             
                             # Convert selected_day to date format (e.g., "3NOV" -> "Nov 3")
                             try:
+                                st.write(f"**Selected day:** '{selected_day}'")
+                                
                                 # Parse the day format (e.g., "3NOV", "4NOV")
                                 day_num = ''.join(filter(str.isdigit, selected_day))
                                 month_abbr = ''.join(filter(str.isalpha, selected_day))
+                                
+                                st.write(f"- Day number: '{day_num}'")
+                                st.write(f"- Month abbreviation: '{month_abbr}'")
                                 
                                 # Convert to "Nov 3" format
                                 month_map = {
@@ -1259,13 +1273,22 @@ elif st.session_state.page == "daily_inventory":
                                 }
                                 
                                 formatted_date = f"{month_map.get(month_abbr.upper(), month_abbr)} {day_num}"
+                                st.write(f"**Formatted date for matching:** '{formatted_date}'")
                                 
                                 # Check if dates match
                                 if date_in_col_b and date_in_col_b == formatted_date:
                                     matched = True
+                                    st.success(f"✅ DATES MATCH! Will use beginning inventory from Column B")
+                                else:
+                                    matched = False
+                                    st.warning(f"❌ DATES DON'T MATCH - Beginning inventory will be 0.00")
+                                    st.write(f"Expected: '{formatted_date}'")
+                                    st.write(f"Got: '{date_in_col_b}'")
                                     
-                            except:
-                                pass
+                            except Exception as e:
+                                st.error(f"Error formatting date: {e}")
+                            
+                            st.markdown("---")
                             
                             for name in ingredient_order:
                                 total_qty = all_ingredients[name]
