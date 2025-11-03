@@ -213,9 +213,10 @@ st.markdown("""
         color: white;
         padding: 1.2rem 1.5rem;
         border-radius: 15px;
-        display: inline-block;
+        display: block;
         margin-top: 1rem;
         transition: all 0.3s ease;
+        width: 100%:
     }
     
     .total-weight-box:hover {
