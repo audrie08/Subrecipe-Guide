@@ -875,9 +875,12 @@ elif st.session_state.page == "Weekly Inventory":
                                     if rm_type != "N/A":
                                         all_rm_types.add(rm_type)
                 
+                # Add "Frozen Meat" to filter options and sort
+                all_rm_types.add("Frozen Meat")
+                rm_type_options = ["All"] + sorted(list(all_rm_types))
+                
                 # Add filter dropdown
                 st.markdown("### Filter by Type of Raw Material")
-                rm_type_options = ["All"] + sorted(list(all_rm_types))
                 selected_rm_type = st.selectbox("Select Type", options=rm_type_options, key="wps_rm_type_filter")
                 
                 st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
@@ -970,13 +973,6 @@ elif st.session_state.page == "Weekly Inventory":
                 with col_left:
                     st.markdown("### SKU Weekly Batches")
                     
-                    # Display Total Raw Materials below title
-                    st.markdown(f"""
-                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                            <span class="weight-label">Total Raw Materials Needed for the Week:</span> {total_materials:,.2f} KG
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
                     # Display batch table (without Total_Batches column)
                     batch_display = display_df.drop(columns=['Total_Batches'])
                     
@@ -999,16 +995,11 @@ elif st.session_state.page == "Weekly Inventory":
                 with col_right:
                     st.markdown("### Raw Materials")
                     
-                    # Display Total Price below title
-                    st.markdown(f"""
-                        <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                            <span class="weight-label"> Total Price:</span> ₱{total_price_sum:,.2f}
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
                     # Display aggregated ingredients in order of appearance with Beginning Inventory
                     if all_ingredients:
                         ingredients_list = []
+                        filtered_total_materials = 0
+                        filtered_total_price = 0
                         
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
@@ -1016,6 +1007,7 @@ elif st.session_state.page == "Weekly Inventory":
                             # Get Type and Price from ingredients sheet (index 4)
                             rm_type = "N/A"
                             rm_price = 0
+                            qty_conv = 1
                             
                             if not ingredients_df.empty:
                                 name_normalized = name.strip().lower()
@@ -1030,23 +1022,39 @@ elif st.session_state.page == "Weekly Inventory":
                                     if pd.notna(rm_type_value) and rm_type_value != '':
                                         rm_type = str(rm_type_value)
                                 
-                                # Match against Column B (index 1) for Price in Column E (index 4)
+                                # Match against Column B (index 1) for Price in Column E (index 4) and Qty Conv in Column D (index 3)
                                 price_row = ingredients_df[
                                     ingredients_df['_normalized_ingredient'] == name_normalized
                                 ]
                                 
-                                if not price_row.empty and len(price_row.iloc[0]) > 4:
-                                    try:
-                                        price_value = price_row.iloc[0].iloc[4]
-                                        if pd.notna(price_value) and price_value != '':
-                                            price_str = str(price_value).replace('₱', '').replace(',', '').strip()
-                                            rm_price = float(price_str)
-                                    except (ValueError, TypeError, IndexError):
-                                        rm_price = 0
+                                if not price_row.empty:
+                                    if len(price_row.iloc[0]) > 4:
+                                        try:
+                                            price_value = price_row.iloc[0].iloc[4]
+                                            if pd.notna(price_value) and price_value != '':
+                                                price_str = str(price_value).replace('₱', '').replace(',', '').strip()
+                                                rm_price = float(price_str)
+                                        except (ValueError, TypeError, IndexError):
+                                            rm_price = 0
+                                    
+                                    if len(price_row.iloc[0]) > 3:
+                                        try:
+                                            qty_conv_value = price_row.iloc[0].iloc[3]
+                                            if pd.notna(qty_conv_value) and qty_conv_value != '':
+                                                qty_conv = float(qty_conv_value)
+                                                if qty_conv == 0:
+                                                    qty_conv = 1
+                                        except (ValueError, TypeError, IndexError):
+                                            qty_conv = 1
                             
                             # Apply filter
                             if selected_rm_type != "All" and rm_type != selected_rm_type:
                                 continue
+                            
+                            # Add to filtered totals
+                            filtered_total_materials += total_qty
+                            item_price = (total_qty / qty_conv) * rm_price
+                            filtered_total_price += item_price
                             
                             # Find beginning inventory for this ingredient
                             beginning_inv = 0
@@ -1081,6 +1089,23 @@ elif st.session_state.page == "Weekly Inventory":
                                 "Difference (KG)": f"<b>{difference:,.2f}</b>"
                             })
                         
+                        # Display filtered totals
+                        col_total1, col_total2 = st.columns(2)
+                        
+                        with col_total1:
+                            st.markdown(f"""
+                                <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
+                                    <span class="weight-label">Total Raw Materials:</span> {filtered_total_materials:,.2f} KG
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        with col_total2:
+                            st.markdown(f"""
+                                <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
+                                    <span class="weight-label">Total Price:</span> ₱{filtered_total_price:,.2f}
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
                         ingredients_display_df = pd.DataFrame(ingredients_list)
                         
                         html_table = ingredients_display_df.to_html(
@@ -1090,7 +1115,26 @@ elif st.session_state.page == "Weekly Inventory":
                             table_id='ingredients-explosion'
                         )
                         
+                        # Add CSS for equal column widths
                         table_html = f"""
+                        <style>
+                        #ingredients-explosion th:nth-child(1),
+                        #ingredients-explosion td:nth-child(1) {{
+                            width: 25%;
+                        }}
+                        #ingredients-explosion th:nth-child(2),
+                        #ingredients-explosion td:nth-child(2),
+                        #ingredients-explosion th:nth-child(3),
+                        #ingredients-explosion td:nth-child(3),
+                        #ingredients-explosion th:nth-child(4),
+                        #ingredients-explosion td:nth-child(4),
+                        #ingredients-explosion th:nth-child(5),
+                        #ingredients-explosion td:nth-child(5),
+                        #ingredients-explosion th:nth-child(6),
+                        #ingredients-explosion td:nth-child(6) {{
+                            width: 15%;
+                        }}
+                        </style>
                         <div class="wps-table-container">
                             {html_table}
                         </div>
