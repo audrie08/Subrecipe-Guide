@@ -1199,35 +1199,36 @@ elif st.session_state.page == "daily_inventory":
             display_df = display_df.drop(columns=['_normalized'])
             
             if not display_df.empty:
-                # Day filter dropdown
-                st.markdown("### Select Day")
-                day_options = batch_headers
-                selected_day = st.selectbox("Choose a day", options=day_options, key="day_filter")
+                # Filters in same row
+                st.markdown("### Filters")
+                filter_col1, filter_col2 = st.columns(2)
                 
-                # Get all unique types of raw materials for filter
-                all_rm_types = set()
-                if not ingredients_df.empty:
-                    for name in display_df['Subrecipe']:
-                        subrecipe_normalized = name.strip().lower()
-                        recipe_ingredients = ingredients_df[
-                            ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
-                        ].copy()
-                        
-                        if not recipe_ingredients.empty:
-                            for _, ing_row in recipe_ingredients.iterrows():
-                                # Get type from Column H (index 7) by matching Column G (index 6)
-                                if len(ing_row) > 7:
-                                    rm_type = ing_row.iloc[7] if pd.notna(ing_row.iloc[7]) else "N/A"
-                                    if rm_type != "N/A":
-                                        all_rm_types.add(rm_type)
+                with filter_col1:
+                    day_options = batch_headers
+                    selected_day = st.selectbox("Choose a day", options=day_options, key="day_filter")
                 
-                # Add "Frozen Meat" to filter options and sort
-                all_rm_types.add("Frozen Meat")
-                rm_type_options = ["All"] + sorted(list(all_rm_types))
-                
-                # Add RM Type filter dropdown
-                st.markdown("### Filter by Type of Raw Material")
-                selected_rm_type = st.selectbox("Select Type", options=rm_type_options, key="daily_rm_type_filter")
+                with filter_col2:
+                    # Get all unique types of raw materials for filter
+                    all_rm_types = set()
+                    if not ingredients_df.empty:
+                        for name in display_df['Subrecipe']:
+                            subrecipe_normalized = name.strip().lower()
+                            recipe_ingredients = ingredients_df[
+                                ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
+                            ].copy()
+                            
+                            if not recipe_ingredients.empty:
+                                for _, ing_row in recipe_ingredients.iterrows():
+                                    # Get type from Column H (index 7) by matching Column G (index 6)
+                                    if len(ing_row) > 7:
+                                        rm_type = ing_row.iloc[7] if pd.notna(ing_row.iloc[7]) else "N/A"
+                                        if rm_type != "N/A":
+                                            all_rm_types.add(rm_type)
+                    
+                    # Add "Frozen Meat" to filter options and sort
+                    all_rm_types.add("Frozen Meat")
+                    rm_type_options = ["All"] + sorted(list(all_rm_types))
+                    selected_rm_type = st.selectbox("Select Type of RM", options=rm_type_options, key="daily_rm_type_filter")
                 
                 st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
                 
@@ -1485,7 +1486,7 @@ elif st.session_state.page == "daily_inventory":
                                     "Inventory on Hand (KG)": f"{beginning_inv:,.2f}"
                                 })
                             
-                            # Display filtered total price
+                            # After loop completes, display filtered totals
                             with total_price_placeholder:
                                 st.markdown(f"""
                                     <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
@@ -1493,7 +1494,6 @@ elif st.session_state.page == "daily_inventory":
                                     </div>
                                 """, unsafe_allow_html=True)
                             
-                            # Display filtered total inventory in left column
                             with total_inventory_placeholder:
                                 st.markdown(f"""
                                     <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
