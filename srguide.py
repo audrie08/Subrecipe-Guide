@@ -1106,41 +1106,25 @@ elif st.session_state.page == "Weekly Inventory":
                                 </div>
                             """, unsafe_allow_html=True)
                         
-                        ingredients_display_df = pd.DataFrame(ingredients_list)
-                        
-                        html_table = ingredients_display_df.to_html(
-                            escape=False,
-                            index=False,
-                            classes='wps-table',
-                            table_id='ingredients-explosion'
-                        )
-                        
-                        # Add CSS for equal column widths
-                        table_html = f"""
-                        <style>
-                        #ingredients-explosion th:nth-child(1),
-                        #ingredients-explosion td:nth-child(1) {{
-                            width: 25%;
-                        }}
-                        #ingredients-explosion th:nth-child(2),
-                        #ingredients-explosion td:nth-child(2),
-                        #ingredients-explosion th:nth-child(3),
-                        #ingredients-explosion td:nth-child(3),
-                        #ingredients-explosion th:nth-child(4),
-                        #ingredients-explosion td:nth-child(4),
-                        #ingredients-explosion th:nth-child(5),
-                        #ingredients-explosion td:nth-child(5),
-                        #ingredients-explosion th:nth-child(6),
-                        #ingredients-explosion td:nth-child(6) {{
-                            width: 15%;
-                        }}
-                        </style>
-                        <div class="wps-table-container">
-                            {html_table}
-                        </div>
-                        """
-                        
-                        st.markdown(table_html, unsafe_allow_html=True)
+                        if ingredients_list:
+                            ingredients_display_df = pd.DataFrame(ingredients_list)
+                            
+                            html_table = ingredients_display_df.to_html(
+                                escape=False,
+                                index=False,
+                                classes='wps-table',
+                                table_id='ingredients-explosion'
+                            )
+                            
+                            table_html = f"""
+                            <div class="wps-table-container">
+                                {html_table}
+                            </div>
+                            """
+                            
+                            st.markdown(table_html, unsafe_allow_html=True)
+                        else:
+                            st.warning(f"No ingredients found for filter: {selected_rm_type}")
                     else:
                         st.warning("No ingredients data found for selected subrecipes")
             else:
