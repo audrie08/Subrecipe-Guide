@@ -876,7 +876,7 @@ elif st.session_state.page == "Weekly Inventory":
                                         all_rm_types.add(rm_type)
                 
                 # Add "Frozen Meat" to filter options and sort
-                all_rm_types.add("FROZEN MEAT")
+                all_rm_types.add("Frozen Meat")
                 rm_type_options = ["All"] + sorted(list(all_rm_types))
                 
                 # Add filter dropdown
@@ -1204,6 +1204,31 @@ elif st.session_state.page == "daily_inventory":
                 day_options = batch_headers
                 selected_day = st.selectbox("Choose a day", options=day_options, key="day_filter")
                 
+                # Get all unique types of raw materials for filter
+                all_rm_types = set()
+                if not ingredients_df.empty:
+                    for name in display_df['Subrecipe']:
+                        subrecipe_normalized = name.strip().lower()
+                        recipe_ingredients = ingredients_df[
+                            ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
+                        ].copy()
+                        
+                        if not recipe_ingredients.empty:
+                            for _, ing_row in recipe_ingredients.iterrows():
+                                # Get type from Column H (index 7) by matching Column G (index 6)
+                                if len(ing_row) > 7:
+                                    rm_type = ing_row.iloc[7] if pd.notna(ing_row.iloc[7]) else "N/A"
+                                    if rm_type != "N/A":
+                                        all_rm_types.add(rm_type)
+                
+                # Add "Frozen Meat" to filter options and sort
+                all_rm_types.add("Frozen Meat")
+                rm_type_options = ["All"] + sorted(list(all_rm_types))
+                
+                # Add RM Type filter dropdown
+                st.markdown("### Filter by Type of Raw Material")
+                selected_rm_type = st.selectbox("Select Type", options=rm_type_options, key="daily_rm_type_filter")
+                
                 st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
                 
                 # Get the column index for selected day
@@ -1304,12 +1329,8 @@ elif st.session_state.page == "daily_inventory":
                     with col_left:
                         st.markdown("### SKU Weekly Batches")
                         
-                        # Display Total Raw Materials below title
-                        st.markdown(f"""
-                            <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                                <span class="weight-label">Daily Total Raw Materials ({selected_day}):</span> {total_materials:,.2f} KG
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # Placeholder for total - will be calculated after filtering
+                        total_inventory_placeholder = st.empty()
                         
                         # Display batch table for selected day only
                         batch_display = filtered_display_df[['Subrecipe', display_df.columns[selected_day_index]]]
@@ -1334,16 +1355,14 @@ elif st.session_state.page == "daily_inventory":
                     with col_right:
                         st.markdown("### Raw Materials")
                         
-                        # Display Total Price below title
-                        st.markdown(f"""
-                            <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
-                                <span class="weight-label">Daily Total Price ({selected_day}):</span> ₱{total_price_sum:,.2f}
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # Placeholder for total price - will be calculated after filtering
+                        total_price_placeholder = st.empty()
                         
                         # Display aggregated ingredients
                         if all_ingredients:
                             ingredients_list = []
+                            filtered_total_inventory = 0
+                            filtered_total_price = 0
                             
                             # Get date from Column B, Row 1 of beginning inventory sheet
                             date_in_col_b = None
@@ -1386,7 +1405,52 @@ elif st.session_state.page == "daily_inventory":
                                 pass
                             
                             for name in ingredient_order:
-                                total_qty = all_ingredients[name]
+                                # Get Type and Price from ingredients sheet
+                                rm_type = "N/A"
+                                rm_price = 0
+                                qty_conv = 1
+                                
+                                if not ingredients_df.empty:
+                                    name_normalized = name.strip().lower()
+                                    
+                                    # Match against Column G (index 6) for Type in Column H (index 7)
+                                    type_row = ingredients_df[
+                                        ingredients_df.iloc[:, 6].astype(str).str.strip().str.lower() == name_normalized
+                                    ]
+                                    
+                                    if not type_row.empty and len(type_row.iloc[0]) > 7:
+                                        rm_type_value = type_row.iloc[0].iloc[7]
+                                        if pd.notna(rm_type_value) and rm_type_value != '':
+                                            rm_type = str(rm_type_value)
+                                    
+                                    # Match against Column B (index 1) for Price in Column E (index 4) and Qty Conv
+                                    price_row = ingredients_df[
+                                        ingredients_df['_normalized_ingredient'] == name_normalized
+                                    ]
+                                    
+                                    if not price_row.empty:
+                                        if len(price_row.iloc[0]) > 4:
+                                            try:
+                                                price_value = price_row.iloc[0].iloc[4]
+                                                if pd.notna(price_value) and price_value != '':
+                                                    price_str = str(price_value).replace('₱', '').replace(',', '').strip()
+                                                    rm_price = float(price_str)
+                                            except (ValueError, TypeError, IndexError):
+                                                rm_price = 0
+                                        
+                                        if len(price_row.iloc[0]) > 3:
+                                            try:
+                                                qty_conv_value = price_row.iloc[0].iloc[3]
+                                                if pd.notna(qty_conv_value) and qty_conv_value != '':
+                                                    qty_conv = float(qty_conv_value)
+                                                    if qty_conv == 0:
+                                                        qty_conv = 1
+                                            except (ValueError, TypeError, IndexError):
+                                                qty_conv = 1
+                                
+                                # Apply filter
+                                if selected_rm_type != "All" and rm_type != selected_rm_type:
+                                    continue
                                 
                                 # Find beginning inventory for this ingredient
                                 beginning_inv = 0
@@ -1407,29 +1471,56 @@ elif st.session_state.page == "daily_inventory":
                                                     beginning_inv = float(inv_value)
                                         except (ValueError, TypeError, IndexError):
                                             beginning_inv = 0
-                                # If date not matched, beginning_inv remains 0
+                                
+                                # Add to filtered totals
+                                filtered_total_inventory += beginning_inv
+                                if beginning_inv > 0:
+                                    item_price = (beginning_inv / qty_conv) * rm_price
+                                    filtered_total_price += item_price
                                 
                                 ingredients_list.append({
                                     "Raw Material": name,
+                                    "Type": rm_type,
+                                    "Price": f"₱{rm_price:,.2f}",
                                     "Inventory on Hand (KG)": f"{beginning_inv:,.2f}"
                                 })
                             
-                            ingredients_display_df = pd.DataFrame(ingredients_list)
+                            # Display filtered total price
+                            with total_price_placeholder:
+                                st.markdown(f"""
+                                    <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
+                                        <span class="weight-label">Daily Total Price ({selected_day}):</span> ₱{filtered_total_price:,.2f}
+                                    </div>
+                                """, unsafe_allow_html=True)
                             
-                            html_table = ingredients_display_df.to_html(
-                                escape=False,
-                                index=False,
-                                classes='wps-table',
-                                table_id='ingredients-explosion-daily'
-                            )
+                            # Display filtered total inventory in left column
+                            with total_inventory_placeholder:
+                                st.markdown(f"""
+                                    <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
+                                        <span class="weight-label">Daily Total Inventory ({selected_day}):</span> {filtered_total_inventory:,.2f} KG
+                                    </div>
+                                """, unsafe_allow_html=True)
                             
-                            table_html = f"""
-                            <div class="wps-table-container">
-                                {html_table}
-                            </div>
-                            """
-                            
-                            st.markdown(table_html, unsafe_allow_html=True)
+                            if ingredients_list:
+                            if ingredients_list:
+                                ingredients_display_df = pd.DataFrame(ingredients_list)
+                                
+                                html_table = ingredients_display_df.to_html(
+                                    escape=False,
+                                    index=False,
+                                    classes='wps-table',
+                                    table_id='ingredients-explosion-daily'
+                                )
+                                
+                                table_html = f"""
+                                <div class="wps-table-container">
+                                    {html_table}
+                                </div>
+                                """
+                                
+                                st.markdown(table_html, unsafe_allow_html=True)
+                            else:
+                                st.warning(f"No ingredients found for filter: {selected_rm_type}")
                         else:
                             st.warning("No ingredients data found for selected day")
                 else:
