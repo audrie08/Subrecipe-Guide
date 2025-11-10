@@ -1502,7 +1502,6 @@ elif st.session_state.page == "daily_inventory":
                                 """, unsafe_allow_html=True)
                             
                             if ingredients_list:
-                            if ingredients_list:
                                 ingredients_display_df = pd.DataFrame(ingredients_list)
                                 
                                 html_table = ingredients_display_df.to_html(
