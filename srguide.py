@@ -973,6 +973,9 @@ elif st.session_state.page == "Weekly Inventory":
                 with col_left:
                     st.markdown("### SKU Weekly Batches")
                     
+                    # Placeholder for total - will be calculated after filtering
+                    total_materials_placeholder = st.empty()
+                    
                     # Display batch table (without Total_Batches column)
                     batch_display = display_df.drop(columns=['Total_Batches'])
                     
@@ -994,6 +997,9 @@ elif st.session_state.page == "Weekly Inventory":
                 
                 with col_right:
                     st.markdown("### Raw Materials")
+                    
+                    # Placeholder for total price - will be calculated after filtering
+                    total_price_placeholder = st.empty()
                     
                     # Display aggregated ingredients in order of appearance with Beginning Inventory
                     if all_ingredients:
@@ -1089,17 +1095,15 @@ elif st.session_state.page == "Weekly Inventory":
                                 "Difference (KG)": f"<b>{difference:,.2f}</b>"
                             })
                         
-                        # Display filtered totals
-                        col_total1, col_total2 = st.columns(2)
-                        
-                        with col_total1:
+                        # Display totals in their respective positions
+                        with total_materials_placeholder:
                             st.markdown(f"""
                                 <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
                                     <span class="weight-label">Total Raw Materials:</span> {filtered_total_materials:,.2f} KG
                                 </div>
                             """, unsafe_allow_html=True)
                         
-                        with col_total2:
+                        with total_price_placeholder:
                             st.markdown(f"""
                                 <div class="total-weight-box" style="margin-bottom: 1.5rem; margin-top: 0.5rem;">
                                     <span class="weight-label">Total Price:</span> ₱{filtered_total_price:,.2f}
