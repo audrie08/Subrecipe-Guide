@@ -876,7 +876,7 @@ elif st.session_state.page == "Weekly Inventory":
                                         all_rm_types.add(rm_type)
                 
                 # Add "Frozen Meat" to filter options and sort
-                all_rm_types.add("Frozen Meat")
+                all_rm_types.add("FROZEN MEAT")
                 rm_type_options = ["All"] + sorted(list(all_rm_types))
                 
                 # Add filter dropdown
