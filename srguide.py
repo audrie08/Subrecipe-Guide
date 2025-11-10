@@ -858,6 +858,30 @@ elif st.session_state.page == "Weekly Inventory":
             display_df = display_df.drop(columns=['_normalized'])
             
             if not display_df.empty:
+                # Get all unique types of raw materials for filter
+                all_rm_types = set()
+                if not ingredients_df.empty:
+                    for name in display_df['Subrecipe']:
+                        subrecipe_normalized = name.strip().lower()
+                        recipe_ingredients = ingredients_df[
+                            ingredients_df['_normalized_subrecipe'] == subrecipe_normalized
+                        ].copy()
+                        
+                        if not recipe_ingredients.empty:
+                            for _, ing_row in recipe_ingredients.iterrows():
+                                # Get type from Column H (index 7) by matching Column G (index 6)
+                                if len(ing_row) > 7:
+                                    rm_type = ing_row.iloc[7] if pd.notna(ing_row.iloc[7]) else "N/A"
+                                    if rm_type != "N/A":
+                                        all_rm_types.add(rm_type)
+                
+                # Add filter dropdown
+                st.markdown("### Filter by Type of Raw Material")
+                rm_type_options = ["All"] + sorted(list(all_rm_types))
+                selected_rm_type = st.selectbox("Select Type", options=rm_type_options, key="wps_rm_type_filter")
+                
+                st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+                
                 # Aggregate ingredients maintaining subrecipe order FIRST
                 all_ingredients = {}
                 ingredient_order = []  # Track order of first appearance
@@ -989,6 +1013,41 @@ elif st.session_state.page == "Weekly Inventory":
                         for name in ingredient_order:
                             total_qty = all_ingredients[name]
                             
+                            # Get Type and Price from ingredients sheet (index 4)
+                            rm_type = "N/A"
+                            rm_price = 0
+                            
+                            if not ingredients_df.empty:
+                                name_normalized = name.strip().lower()
+                                
+                                # Match against Column G (index 6) for Type in Column H (index 7)
+                                type_row = ingredients_df[
+                                    ingredients_df.iloc[:, 6].astype(str).str.strip().str.lower() == name_normalized
+                                ]
+                                
+                                if not type_row.empty and len(type_row.iloc[0]) > 7:
+                                    rm_type_value = type_row.iloc[0].iloc[7]
+                                    if pd.notna(rm_type_value) and rm_type_value != '':
+                                        rm_type = str(rm_type_value)
+                                
+                                # Match against Column B (index 1) for Price in Column E (index 4)
+                                price_row = ingredients_df[
+                                    ingredients_df['_normalized_ingredient'] == name_normalized
+                                ]
+                                
+                                if not price_row.empty and len(price_row.iloc[0]) > 4:
+                                    try:
+                                        price_value = price_row.iloc[0].iloc[4]
+                                        if pd.notna(price_value) and price_value != '':
+                                            price_str = str(price_value).replace('₱', '').replace(',', '').strip()
+                                            rm_price = float(price_str)
+                                    except (ValueError, TypeError, IndexError):
+                                        rm_price = 0
+                            
+                            # Apply filter
+                            if selected_rm_type != "All" and rm_type != selected_rm_type:
+                                continue
+                            
                             # Find beginning inventory for this ingredient
                             beginning_inv = 0
                             if not beginning_inventory_df.empty:
@@ -1015,6 +1074,8 @@ elif st.session_state.page == "Weekly Inventory":
                             
                             ingredients_list.append({
                                 "Raw Material": name,
+                                "Type": rm_type,
+                                "Price": f"₱{rm_price:,.2f}",
                                 "Total Qty (KG)": f"{total_qty:,.2f}",
                                 "Beginning (KG)": f"{beginning_inv:,.2f}",
                                 "Difference (KG)": f"<b>{difference:,.2f}</b>"
