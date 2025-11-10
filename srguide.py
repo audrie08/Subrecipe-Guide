@@ -1411,6 +1411,11 @@ elif st.session_state.page == "daily_inventory":
                                 rm_price = 0
                                 qty_conv = 1
                                 
+                                # DEBUG
+                                if name == ingredient_order[0]:
+                                    st.markdown("### 🔍 DEBUG: Price Calculation for First Item")
+                                    st.write(f"**Ingredient:** {name}")
+                                
                                 if not ingredients_df.empty:
                                     name_normalized = name.strip().lower()
                                     
@@ -1436,8 +1441,13 @@ elif st.session_state.page == "daily_inventory":
                                                 if pd.notna(price_value) and price_value != '':
                                                     price_str = str(price_value).replace('₱', '').replace(',', '').strip()
                                                     rm_price = float(price_str)
-                                            except (ValueError, TypeError, IndexError):
+                                                    
+                                                    if name == ingredient_order[0]:
+                                                        st.write(f"**Price found:** ₱{rm_price:,.2f}")
+                                            except (ValueError, TypeError, IndexError) as e:
                                                 rm_price = 0
+                                                if name == ingredient_order[0]:
+                                                    st.error(f"Error parsing price: {e}")
                                         
                                         if len(price_row.iloc[0]) > 3:
                                             try:
@@ -1446,12 +1456,22 @@ elif st.session_state.page == "daily_inventory":
                                                     qty_conv = float(qty_conv_value)
                                                     if qty_conv == 0:
                                                         qty_conv = 1
-                                            except (ValueError, TypeError, IndexError):
+                                                    
+                                                    if name == ingredient_order[0]:
+                                                        st.write(f"**Qty Conversion:** {qty_conv}")
+                                            except (ValueError, TypeError, IndexError) as e:
                                                 qty_conv = 1
+                                                if name == ingredient_order[0]:
+                                                    st.error(f"Error parsing qty conv: {e}")
                                 
                                 # Apply filter
                                 if selected_rm_type != "All" and rm_type != selected_rm_type:
+                                    if name == ingredient_order[0]:
+                                        st.warning(f"**FILTERED OUT** - Type: {rm_type} doesn't match {selected_rm_type}")
                                     continue
+                                
+                                if name == ingredient_order[0]:
+                                    st.success(f"**PASSED FILTER** - Type: {rm_type}")
                                 
                                 # Find beginning inventory for this ingredient
                                 beginning_inv = 0
@@ -1470,14 +1490,31 @@ elif st.session_state.page == "daily_inventory":
                                                 inv_value = inv_row.iloc[0].iloc[1]
                                                 if pd.notna(inv_value) and inv_value != '':
                                                     beginning_inv = float(inv_value)
-                                        except (ValueError, TypeError, IndexError):
+                                                    
+                                                    if name == ingredient_order[0]:
+                                                        st.write(f"**Beginning Inventory:** {beginning_inv:,.2f} KG")
+                                        except (ValueError, TypeError, IndexError) as e:
                                             beginning_inv = 0
+                                            if name == ingredient_order[0]:
+                                                st.error(f"Error parsing inventory: {e}")
+                                
+                                if name == ingredient_order[0]:
+                                    if beginning_inv == 0:
+                                        st.warning(f"**Beginning Inventory is 0** - No price will be added")
                                 
                                 # Add to filtered totals
                                 filtered_total_inventory += beginning_inv
                                 if beginning_inv > 0:
                                     item_price = (beginning_inv / qty_conv) * rm_price
                                     filtered_total_price += item_price
+                                    
+                                    if name == ingredient_order[0]:
+                                        st.write(f"**Price Calculation:**")
+                                        st.write(f"  Formula: ({beginning_inv} / {qty_conv}) × {rm_price} = {item_price:,.2f}")
+                                        st.write(f"**Running Total Price:** ₱{filtered_total_price:,.2f}")
+                                
+                                if name == ingredient_order[0]:
+                                    st.markdown("---")
                                 
                                 ingredients_list.append({
                                     "Raw Material": name,
