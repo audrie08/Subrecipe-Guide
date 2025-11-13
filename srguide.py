@@ -1226,7 +1226,7 @@ elif st.session_state.page == "daily_inventory":
                                             all_rm_types.add(rm_type)
                     
                     # Add "Frozen Meat" to filter options and sort
-                    all_rm_types.add("Frozen Meat")
+                    all_rm_types.add("FROZEN MEAT")
                     rm_type_options = ["All"] + sorted(list(all_rm_types))
                     selected_rm_type = st.selectbox("Select Type of RM", options=rm_type_options, key="daily_rm_type_filter")
                 
